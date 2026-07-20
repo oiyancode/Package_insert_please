@@ -2,13 +2,71 @@
 
 ![Versão](https://img.shields.io/badge/versão-v1.0.0-e8c374?style=flat-square) ![Educacional](https://img.shields.io/badge/fins-educacionais-81c8be?style=flat-square) ![Licença](https://img.shields.io/badge/licença-MIT-a6d189?style=flat-square)
 
-Este é um jogo educacional de triagem farmacêutica para estudantes de Farmácia, inspirado na mecânica de *"Papers, Please"*. O projeto foi refatorado utilizando **Vite** e **TypeScript** para garantir organização e facilidade de manutenção de conteúdo.
+Este é um jogo educacional de triagem farmacêutica para estudantes de Farmácia, inspirado na mecânica de *"Papers, Please"*.
 
 ---
 
 ## ⚠️ Aviso Legal / Disclaimer
 
 > **Simulação educacional com fins didáticos. Todos os casos clínicos apresentados são fictícios e foram criados exclusivamente para fins de aprendizagem acadêmica. Este jogo NÃO substitui o julgamento clínico profissional, a orientação de um farmacêutico habilitado ou qualquer forma de aconselhamento médico. Nunca tome decisões sobre saúde com base neste simulador.**
+
+---
+
+## 🎮 Como o Jogo Funciona
+
+O jogo simula um **plantão de triagem farmacêutica** em um hospital universitário. A cada rodada, você recebe um prontuário de paciente e uma receita médica — e precisa decidir o que fazer com ela antes de liberar para dispensação.
+
+### 1. Seleção de Nível (Tela Inicial)
+
+Antes de começar, escolha um dos quatro modos de jogo, filtrados por complexidade curricular:
+
+| Modo | Semestre | Foco clínico |
+|---|---|---|
+| **4º Semestre: Geral** | 4º | Farmacodinâmica básica, toxicidade aguda simples (ex: paracetamol) |
+| **5º Semestre: Cinética** | 5º | Clearance renal, ajuste de dose por depuração biológica |
+| **6º Semestre: Avançado** | 6º | Interações medicamentosas, antagonismo de receptores, polifarmácia |
+| **Mesa Clínica Completa** | Todos | Todos os casos misturados em ordem aleatória |
+
+### 2. A Interface de Jogo (Canvas)
+
+Ao entrar no plantão, a tela é dividida em duas áreas principais:
+
+- **Lado esquerdo — Prontuário e Receita:** exibe os dados do paciente (nome, idade, peso, função renal, alergias, diagnóstico, medicamentos em uso) e a receita prescrita (fármaco, dose, via, frequência e duração).
+- **Lado direito — Manual Clínico:** uma referência consultável com três abas:
+  - **Bulas** — informações do fármaco prescrito (classe, indicação, alertas de segurança, regra de dosagem, meia-vida)
+  - **Interações** — alertas de interação com medicamentos que o paciente já usa
+  - **Gráfico** — curva de concentração plasmática (farmacocinética) simulada, mostrando se a dose está na faixa terapêutica, tóxica ou abaixo do MEC
+
+### 3. Tomando a Decisão (O Carimbo)
+
+O fluxo de decisão é sempre o mesmo — dois cliques:
+
+```
+1. Clique em um dos três carimbos de decisão:
+   [ ✅ APROVAR ]   [ ⚠️ AJUSTAR ]   [ ❌ REJEITAR ]
+
+2. Clique sobre a receita médica para aplicar o carimbo.
+
+3. Clique em "CONFIRMAR DECISÃO" para registrar seu aval.
+```
+
+Após confirmar, o jogo exibe o **feedback clínico** com a justificativa da decisão correta — e um clique em qualquer lugar avança para o próximo caso.
+
+### 4. Pontuação e Advertências
+
+| Evento | Efeito |
+|---|---|
+| Decisão correta | +CR$ 50,00 na pontuação |
+| Decisão errada | +1 advertência |
+| 3 advertências acumuladas | **Game Over** — licença cassada |
+| Todos os casos concluídos | **Vitória** — plantão aprovado |
+
+### 5. Fim de Jogo
+
+- **Vitória:** você esgotou todos os prontuários do modo selecionado sem atingir o limite de erros.
+- **Derrota:** você acumulou **3 advertências** — o jogo encerra e exibe o resumo com acertos, erros e balanço final em créditos.
+
+Após qualquer encerramento, o botão **"Retornar ao Seletor de Nível"** reinicia tudo do zero.
 
 ---
 
