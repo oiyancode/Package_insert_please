@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bula, Por Favor! - Simulador Farmacológico Universitário</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=VT323&display=swap" rel="stylesheet">
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 text-gray-100">
+
+    <div class="w-full max-w-5xl bg-[#282723] border-4 border-[#3c3b35] rounded-lg shadow-2xl p-4 flex flex-col gap-4">
+        <!-- Cabeçalho Administrativo -->
+        <header class="flex flex-col sm:flex-row justify-between items-center border-b-2 border-[#3c3b35] pb-3 px-2">
+            <div>
+                <h1 class="text-3xl font-bold text-[#e8c374] tracking-wider font-mono flex items-center gap-2" style="font-family: 'VT323', monospace;">
+                    <span>⚖️</span> BULA, POR FAVOR! / CLINICAL COMPLIANCE
+                </h1>
+                <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest">Simulador de Triagem e Farmácia Clínica Acadêmica</p>
+            </div>
+            <div class="flex items-center gap-4 mt-3 sm:mt-0">
+                <div class="bg-[#1e1d1a] border border-[#444] px-3 py-1 rounded text-[#a6d189] font-mono text-sm">
+                    Pontuação: <span id="game-score">CR$ 00.00</span>
+                </div>
+                <div class="bg-[#1e1d1a] border border-[#444] px-3 py-1 rounded text-[#e78284] font-mono text-sm">
+                    Advertências: <span id="game-warnings">0 / 3</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tela de Seleção de Níveis (Semestres Acadêmicos) -->
+        <div id="intro-screen" class="bg-[#1f1e1b] border-2 border-[#3a3933] p-6 rounded-lg flex flex-col items-center text-center gap-4">
+            <h2 class="text-2xl font-bold text-[#e8c374] mb-1" style="font-family: 'VT323', monospace; font-size: 2.2rem;">DEPARTAMENTO DE ENSINO - AVALIAÇÃO DE COMPETÊNCIAS</h2>
+            <p class="text-sm max-w-2xl leading-relaxed text-gray-300">
+                Selecione o nível do seu plantão farmacêutico. Cada modo filtra os casos clínicos de acordo com a grade curricular e a complexidade farmacológica exigida de cada período universitário.
+            </p>
+
+            <!-- Painel de Modos de Jogo baseados em Semestres -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-4xl mt-3 text-left">
+                <!-- 4º Semestre -->
+                <button id="btn-semestre4" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
+                    <div>
+                        <strong class="text-[#81c8be] block mb-1 text-sm">4º Semestre: Geral</strong>
+                        <p class="text-xs text-gray-400">Introdução à Farmacodinâmica, dosagens clássicas e toxicidade aguda básica (ex: Paracetamol).</p>
+                    </div>
+                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 4º Sem.</span>
+                </button>
+
+                <!-- 5º Semestre -->
+                <button id="btn-semestre5" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
+                    <div>
+                        <strong class="text-[#e5c890] block mb-1 text-sm">5º Semestre: Cinética</strong>
+                        <p class="text-xs text-gray-400">Clearance renal, excreção de fármacos e ajustes críticos baseados em depuração biológica.</p>
+                    </div>
+                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 5º Sem.</span>
+                </button>
+
+                <!-- 6º Semestre -->
+                <button id="btn-semestre6" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
+                    <div>
+                        <strong class="text-[#f2bcbc] block mb-1 text-sm">6º Semestre: Avançado</strong>
+                        <p class="text-xs text-gray-400">Interações complexas de alta letalidade, antagonismo em receptores e polifarmácia.</p>
+                    </div>
+                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 6º Sem.</span>
+                </button>
+
+                <!-- Modo Clássico / Aleatório -->
+                <button id="btn-aleatorio" class="bg-[#2d2921] hover:bg-[#3c372c] p-4 border-2 border-[#e8c374] rounded transition text-left flex flex-col justify-between">
+                    <div>
+                        <strong class="text-[#e8c374] block mb-1 text-sm">Mesa Clínica Completa</strong>
+                        <p class="text-xs text-gray-300">Modo clássico sem filtros. Todos os semestres integrados de forma aleatória e desafiadora.</p>
+                    </div>
+                    <span class="mt-4 text-xs font-bold text-white uppercase tracking-wider">Mesa Aleatória 🎲</span>
+                </button>
+            </div>
+            
+            <p class="text-xs text-gray-500 mt-2">Dica: Use o novo painel "Gráfico" no manual de consulta para monitorar a concentração plasmática!</p>
+        </div>
+
+        <!-- Área de Gameplay do Canvas -->
+        <div id="gameplay-area" class="hidden flex flex-col gap-4">
+            <div class="w-full border-2 border-black rounded shadow-inner overflow-hidden bg-[#24231f]">
+                <canvas id="gameCanvas" width="1000" height="630" class="w-full block"></canvas>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 font-mono bg-[#1e1d1a] p-3 rounded border border-[#3c3b35] gap-2">
+                <span>🔧 CONTROLES: Clique em um dos carimbos abaixo, depois dê um clique sobre a receita para marcar o seu aval clínico.</span>
+                <span class="text-[#e8c374] font-bold">Nível Atual: <span id="active-mode-label" class="text-white">---</span></span>
+            </div>
+        </div>
+
+        <!-- Tela de Fim de Jogo (Game Over / Vitória) -->
+        <div id="end-screen" class="hidden bg-[#1f1e1b] border-2 border-[#3a3933] p-6 rounded-lg flex flex-col items-center text-center gap-4">
+            <h2 id="end-title" class="text-3xl font-bold mb-2 font-mono" style="font-family: 'VT323', monospace;">PLANTÃO ENCERRADO</h2>
+            <p id="end-message" class="text-md max-w-md text-gray-300"></p>
+            <div class="bg-[#282723] p-4 rounded border border-[#444] text-left text-sm font-mono w-full max-w-sm">
+                <p class="flex justify-between"><span>Decisões Corretas:</span> <span id="end-correct" class="text-[#a6d189]">0</span></p>
+                <p class="flex justify-between"><span>Erros Cometidos:</span> <span id="end-errors" class="text-[#e78284]">0</span></p>
+                <p class="flex justify-between border-t border-[#444] mt-2 pt-2 text-lg font-bold"><span>Balanço de Notas:</span> <span id="end-balance" class="text-[#e5c890]">CR$ 00.00</span></p>
+            </div>
+            <button id="btn-reset" class="mt-4 px-8 py-3 bg-[#e8c374] hover:bg-[#cca34c] text-gray-900 font-bold rounded-lg shadow-lg transition">
+                RETORNAR AO SELETOR DE NÍVEL
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
