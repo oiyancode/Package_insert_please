@@ -1,6 +1,14 @@
 # ⚖️ Bula, Por Favor! - Clinical Compliance
 
+![Versão](https://img.shields.io/badge/versão-v1.0.0-e8c374?style=flat-square) ![Educacional](https://img.shields.io/badge/fins-educacionais-81c8be?style=flat-square) ![Licença](https://img.shields.io/badge/licença-MIT-a6d189?style=flat-square)
+
 Este é um jogo educacional de triagem farmacêutica para estudantes de Farmácia, inspirado na mecânica de *"Papers, Please"*. O projeto foi refatorado utilizando **Vite** e **TypeScript** para garantir organização e facilidade de manutenção de conteúdo.
+
+---
+
+## ⚠️ Aviso Legal / Disclaimer
+
+> **Simulação educacional com fins didáticos. Todos os casos clínicos apresentados são fictícios e foram criados exclusivamente para fins de aprendizagem acadêmica. Este jogo NÃO substitui o julgamento clínico profissional, a orientação de um farmacêutico habilitado ou qualquer forma de aconselhamento médico. Nunca tome decisões sobre saúde com base neste simulador.**
 
 ---
 
