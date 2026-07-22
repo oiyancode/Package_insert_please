@@ -1,8 +1,10 @@
 # ⚖️ Bula, Por Favor! - Clinical Compliance
 
-![Versão](https://img.shields.io/badge/versão-v1.0.0-e8c374?style=flat-square) ![Educacional](https://img.shields.io/badge/fins-educacionais-81c8be?style=flat-square) ![Licença](https://img.shields.io/badge/licença-MIT-a6d189?style=flat-square)
+![Versão](https://img.shields.io/badge/versão-v2.0.0-e8c374?style=flat-square) ![Educacional](https://img.shields.io/badge/fins-educacionais-81c8be?style=flat-square) ![Licença](https://img.shields.io/badge/licença-MIT-a6d189?style=flat-square)
 
-Este é um jogo educacional de triagem farmacêutica para estudantes de Farmácia, inspirado na mecânica de *"Papers, Please"*.
+Jogo educacional de triagem farmacêutica para estudantes de Farmácia, inspirado na mecânica de *"Papers, Please"*.
+
+> **Nota de versão:** a partir da v2.0.0, o jogo abandonou a renderização em `<canvas>` e o sistema de temas trocáveis. A interface agora é feita inteiramente em **DOM + Tailwind CSS**, o que trouxe mais legibilidade, responsividade e acessibilidade — trade-off consciente em relação à v1.0.0 (canvas + pixel art).
 
 ---
 
@@ -14,242 +16,177 @@ Este é um jogo educacional de triagem farmacêutica para estudantes de Farmáci
 
 ## 🎮 Como o Jogo Funciona
 
-O jogo simula um **plantão de triagem farmacêutica** em um hospital universitário. A cada rodada, você recebe um prontuário de paciente e uma receita médica — e precisa decidir o que fazer com ela antes de liberar para dispensação.
+O jogo simula um **plantão de triagem farmacêutica**. A cada rodada, você recebe três documentos sobre o mesmo paciente e precisa decidir o que fazer com a prescrição antes de liberar a dispensação.
 
-### 1. Seleção de Nível (Tela Inicial)
+### 1. Seleção de Semestre (Modal Inicial)
 
-Antes de começar, escolha um dos quatro modos de jogo, filtrados por complexidade curricular:
+| Modo | Foco clínico |
+|---|---|
+| **4º Semestre: Geral** | Farmacodinâmica básica, toxicidade aguda simples |
+| **5º Semestre: Cinética** | Clearance renal, ajuste de dose por depuração biológica |
+| **6º Semestre: Avançado** | Interações medicamentosas, antagonismo de receptores, polifarmácia |
+| **Mesa Clínica Completa** | Todos os casos misturados em ordem aleatória |
 
-| Modo | Semestre | Foco clínico |
-|---|---|---|
-| **4º Semestre: Geral** | 4º | Farmacodinâmica básica, toxicidade aguda simples (ex: paracetamol) |
-| **5º Semestre: Cinética** | 5º | Clearance renal, ajuste de dose por depuração biológica |
-| **6º Semestre: Avançado** | 6º | Interações medicamentosas, antagonismo de receptores, polifarmácia |
-| **Mesa Clínica Completa** | Todos | Todos os casos misturados em ordem aleatória |
+### 2. Os Três Documentos do Caso
 
-### 2. A Interface de Jogo (Canvas)
+- **Doc. 1 — Ficha do Paciente:** sintomas relatados, comorbidades crônicas, alergias.
+- **Doc. 2 — Laudo Clínico:** diagnóstico, exames laboratoriais relevantes, observação do médico responsável.
+- **Doc. 3 — Prescrição:** fármaco, dose, frequência, duração e outros medicamentos em uso — é aqui que o carimbo é aplicado.
 
-Ao entrar no plantão, a tela é dividida em duas áreas principais:
+### 3. Manual de Referência (Modal "Bulário")
 
-- **Lado esquerdo — Prontuário e Receita:** exibe os dados do paciente (nome, idade, peso, função renal, alergias, diagnóstico, medicamentos em uso) e a receita prescrita (fármaco, dose, via, frequência e duração).
-- **Lado direito — Manual Clínico:** uma referência consultável com três abas:
-  - **Bulas** — informações do fármaco prescrito (classe, indicação, alertas de segurança, regra de dosagem, meia-vida)
-  - **Interações** — alertas de interação com medicamentos que o paciente já usa
-  - **Gráfico** — curva de concentração plasmática (farmacocinética) simulada, mostrando se a dose está na faixa terapêutica, tóxica ou abaixo do MEC
+Consultável em qualquer momento antes de decidir, com duas abas:
+- **Fármacos & Dosagens** — dados de referência do medicamento prescrito.
+- **Gráfico PK** — curva de concentração plasmática calculada a partir da farmacocinética real do caso (`kinetics`), indicando se a dose projetada cai na faixa terapêutica, tóxica ou abaixo do nível mínimo eficaz.
 
-### 3. Tomando a Decisão (O Carimbo)
-
-O fluxo de decisão é sempre o mesmo — dois cliques:
+### 4. Tomando a Decisão (O Carimbo)
 
 ```
-1. Clique em um dos três carimbos de decisão:
-   [ ✅ APROVAR ]   [ ⚠️ AJUSTAR ]   [ ❌ REJEITAR ]
+1. Clique em um dos três carimbos no painel "Porta-Carimbos":
+   [ ✅ APROVAR ]   [ ⚠️ AJUSTAR ]   [ ❌ RECUSAR ]
 
-2. Clique sobre a receita médica para aplicar o carimbo.
-
-3. Clique em "CONFIRMAR DECISÃO" para registrar seu aval.
+2. Clique sobre o Doc. 3 (Prescrição) para aplicar o carimbo escolhido.
+   (Pressione ESC ou "Soltar Carimbo" para desistir da seleção)
 ```
 
-Após confirmar, o jogo exibe o **feedback clínico** com a justificativa da decisão correta — e um clique em qualquer lugar avança para o próximo caso.
+Ao aplicar, um modal de feedback exibe a explicação clínica do caso e o acerto/erro é registrado. Fechar o modal avança para o próximo paciente.
 
-### 4. Pontuação e Advertências
+### 5. Pontuação e Advertências
 
 | Evento | Efeito |
 |---|---|
-| Decisão correta | +CR$ 50,00 na pontuação |
+| Decisão correta | +CR$ 150,00 na pontuação |
 | Decisão errada | +1 advertência |
 | 3 advertências acumuladas | **Game Over** — licença cassada |
 | Todos os casos concluídos | **Vitória** — plantão aprovado |
 
-### 5. Fim de Jogo
-
-- **Vitória:** você esgotou todos os prontuários do modo selecionado sem atingir o limite de erros.
-- **Derrota:** você acumulou **3 advertências** — o jogo encerra e exibe o resumo com acertos, erros e balanço final em créditos.
-
-Após qualquer encerramento, o botão **"Retornar ao Seletor de Nível"** reinicia tudo do zero.
+O cabeçalho exibe em tempo real: pontuação, advertências (`X / 3`) e total de atendimentos realizados.
 
 ---
 
 ## 📁 Estrutura de Pastas
 
-Abaixo está o mapa de organização do código:
-
 ```
-├── index.html            # Estrutura da página (telas de início, fim, seletor de tema)
-├── package.json          # Gerenciamento de dependências
-├── README.md             # Esta documentação
+├── index.html                  # Estrutura DOM completa (docs, modais, cabeçalho)
+├── package.json
+├── README.md
 ├── src/
-│   ├── main.ts           # Inicializador do jogo (usa ThemeManager, nunca temas direto)
-│   ├── style.css         # Estilização base
-│   ├── assets/
-│   │   └── pixelNoir/    # Sprites do tema Pixel Noir (PNG)
+│   ├── main.ts                 # Orquestrador: listeners de UI + ligação logic ↔ render
+│   ├── style.css
 │   ├── audio/
-│   │   └── synth.ts      # Efeitos sonoros (carimbos, acertos, erros)
+│   │   └── soundEngine.ts      # Síntese de efeitos sonoros (Web Audio API)
 │   ├── data/
-│   │   └── cases.ts      # Banco de casos clínicos (Edite aqui!)
+│   │   └── cases.ts            # Banco de casos clínicos (Edite aqui!)
 │   ├── game/
-│   │   ├── state.ts      # Memória do jogo (pontuação, erros, modo ativo)
-│   │   └── logic.ts      # Regras de decisão clínica
-│   └── render/
-│       ├── layout.ts     # Coordenadas e tamanhos dos elementos (FONTE ÚNICA)
-│       ├── theme.ts      # Interface Theme (contrato público de qualquer tema)
-│       ├── themeManager.ts  # Delegador central — main.ts só fala com ele
-│       └── themes/
-│           ├── classic/
-│           │   └── index.ts  # Tema Clássico (formas geométricas flat)
-│           └── pixelNoir/
-│               └── index.ts  # Tema Pixel Noir (sprites PNG + fallback)
+│   │   ├── state.ts            # Memória do jogo (score, warnings, caso atual, modais abertos)
+│   │   └── logic.ts            # Regras puras de decisão — sem acesso a DOM
+│   ├── render/
+│   │   ├── patientDoc.ts       # Doc. 1 — Ficha do paciente
+│   │   ├── labsDoc.ts          # Doc. 2 — Laudo clínico
+│   │   ├── prescriptionDoc.ts  # Doc. 3 — Prescrição + overlay do carimbo
+│   │   ├── stampPanel.ts       # Painel de carimbos + cursor flutuante
+│   │   ├── manualModal.ts      # Modal do bulário (abas + gráfico PK)
+│   │   └── feedbackModal.ts    # Modal de acerto/erro
+│   └── services/
+│       └── bulaService.ts      # Busca dados reais de medicamento (hoje: mock — ver seção Backend)
 ```
 
 ---
 
-## 🚀 Como Executar o Jogo Localmente
+## 🚀 Como Executar Localmente
 
-Para rodar o jogo no seu computador:
+```bash
+npm install
+npm run dev
+```
 
-1. Instale as dependências (necessário apenas na primeira vez):
-   ```bash
-   npm install
-   ```
-2. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-3. Abra o link fornecido no terminal (geralmente `http://localhost:5173`) no seu navegador.
+Abra o link do terminal (geralmente `http://localhost:5173`).
+
+Para rodar os testes automatizados da lógica de jogo:
+
+```bash
+npm run test
+```
+
+---
+
+## 🔌 Conexão com o Backend
+
+O jogo consulta dados reais de medicamentos através de um backend próprio (repositório separado: `bula-por-favor-api`), que atua como proxy seguro para a API do [Bulário Digital](https://bulario.app.br/docs/).
+
+- **Local:** crie um arquivo `.env` na raiz com `VITE_API_URL=http://localhost:3000`.
+- **Produção:** configure `VITE_API_URL` nas variáveis de ambiente do Vercel, apontando para a URL do backend publicado no Render. **Variáveis do Vite são resolvidas no build** — após alterar o valor, é necessário disparar um novo deploy.
+- Enquanto o backend não estiver publicado, `src/services/bulaService.ts` retorna dados mockados — o restante do jogo funciona normalmente sem depender dele.
 
 ---
 
 ## 📝 Como Adicionar ou Modificar Casos Clínicos (Para Farmácia)
 
-Todos os casos clínicos estão listados no arquivo **`src/data/cases.ts`**.
-Para adicionar um novo caso clínico, você só precisa copiar o modelo abaixo, preenchê-lo com as informações clínicas e colá-lo dentro do array `allCases` (separando os casos por uma vírgula `,`).
-
-### 📋 Modelo de Caso Clínico para Copiar e Colar
+Os casos estão em **`src/data/cases.ts`**. Copie o modelo abaixo, preencha e adicione ao array (separando por vírgula):
 
 ```typescript
-    {
-        semester: 4, // 4, 5 ou 6 (período acadêmico em que o caso se encaixa)
-        patient: {
-            name: "Nome Completo do Paciente",
-            age: "Idade (ex: 45 anos)",
-            weight: "Peso (ex: 70 kg)",
-            renal: "Função Renal (ex: 95 mL/min (Função Saudável))",
-            allergies: "Alergias relatadas ou 'Nenhuma'",
-            diagnosis: "Diagnóstico médico ou queixa do paciente",
-            currentMeds: "Medicamentos que o paciente já toma ou 'Nenhum'"
-        },
-        prescription: {
-            drug: "Nome do Fármaco Prescrito",
-            dose: "Dosagem (ex: 500 mg)",
-            route: "Via de administração (ex: Via Oral (VO))",
-            freq: "Frequência (ex: A cada 8 horas (8/8h))",
-            duration: "Duração do tratamento (ex: 10 dias)"
-        },
-        drugDetails: {
-            name: "Nome do Fármaco",
-            class: "Classe farmacológica do medicamento",
-            indication: "Para que é indicado nas bulas clássicas",
-            alert: "Alertas graves de segurança clínica",
-            rule: "Regra acadêmica de dosagem ideal ou contraindicação",
-            halfLife: "Informação sobre meia-vida (t1/2) do fármaco"
-        },
-        correctDecision: "APROVAR", // Deve ser exatamente "APROVAR", "AJUSTAR" ou "REJEITAR"
-        explanation: "Explicação detalhada de por que essa decisão é a correta. Esse texto aparecerá na tela se o estudante acertar.",
-        incorrectText: "Explicação do erro cometido. Esse texto aparecerá na tela se o estudante errar.",
-        kinetics: {
-            halfLife: 3.0,     // Tempo de meia-vida em número (ex: 3.0 para 3 horas)
-            doseAmt: 1.0,      // Altura da dose no gráfico (use valores entre 0.8 e 2.0)
-            interval: 8,       // Frequência das doses em horas (ex: 8 para 8/8h)
-            state: "therapeutic", // Use "therapeutic" (seguro), "toxic" (tóxico) ou "ineffective" (abaixo do MEC)
-            desc: "Mensagem curta que aparece abaixo do gráfico explicando a curva plasmática."
-        }
+{
+    id: 7,
+    semesterTag: "4º Semestre: Geral", // ou "5º Semestre: Cinética" / "6º Semestre: Avançado"
+    avatarIcon: "fa-user",             // ícone Font Awesome do paciente
+    patientName: "Nome Completo do Paciente",
+    age: "Idade (ex: 45 anos)",
+    weight: "Peso (ex: 70 kg)",
+    speech: "Frase em 1ª pessoa contando o motivo da consulta.",
+    doc1: {
+        symptoms: '"Sintomas relatados entre aspas."',
+        chronic: "Comorbidade crônica ou 'Nenhuma'",
+        allergies: "Alergias relatadas ou 'Nenhuma'"
     },
+    doc2: {
+        diagnosis: "Diagnóstico médico",
+        labsHtml: `
+            <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                <span>Nome do exame:</span>
+                <span class="font-bold">Resultado</span>
+            </div>
+        `,
+        doctorObs: '"Observação curta do médico responsável."',
+        doctorName: "Dr(a). Nome • CRM 00000"
+    },
+    doc3: {
+        drug: "NOME DO FÁRMACO DOSE",
+        dose: "Descrição completa da posologia prescrita",
+        freq: "Frequência (ex: 3 vezes ao dia)",
+        duration: "Duração do tratamento",
+        otherDrugs: "Outros medicamentos em uso ou 'Nenhum'"
+    },
+    correctDecision: "APROVAR", // Deve ser exatamente "APROVAR", "AJUSTAR" ou "RECUSAR"
+    explanation: "<strong>Decisão Correta: [...].</strong><br><br>Explicação clínica completa exibida no feedback, seja a decisão certa ou errada.",
+    kinetics: {
+        halfLife: 3.0,          // meia-vida em horas
+        doseAmt: 1.0,           // altura da dose no gráfico (0.8 a 2.0)
+        interval: 8,            // intervalo entre doses em horas
+        state: "therapeutic",   // "therapeutic" | "toxic" | "ineffective"
+        desc: "Mensagem curta explicando a curva plasmática."
+    }
+}
 ```
 
-### ⚠️ Dicas Importantes para Cadastro:
-* **`correctDecision`**: Digite exatamente em letras maiúsculas: `"APROVAR"`, `"AJUSTAR"` ou `"REJEITAR"`.
-* **`kinetics.state`**: Deve ser exatamente um destes três: `"therapeutic"`, `"toxic"` ou `"ineffective"`.
-* Certifique-se de fechar as chaves `{}` e colocar uma vírgula `,` antes do próximo caso.
+### ⚠️ Dicas Importantes para Cadastro
+* **`correctDecision`**: exatamente `"APROVAR"`, `"AJUSTAR"` ou `"RECUSAR"` (maiúsculas).
+* **`kinetics.state`**: exatamente `"therapeutic"`, `"toxic"` ou `"ineffective"`.
+* `labsHtml` aceita HTML simples (é inserido diretamente na tela) — mantenha a mesma estrutura de `<div>` dos exemplos para não quebrar o estilo.
 
 ---
 
-## 🎨 Como Criar um Novo Tema Visual
+## 🧪 Testes
 
-O jogo usa um sistema de temas desacoplado: a lógica do jogo nunca sabe qual tema está ativo. Para criar um novo estilo visual (ex: tema retro, tema minimalista, tema pixel-art alternativo), siga os 3 passos abaixo.
+A lógica de jogo (`src/game/logic.ts`) é desacoplada do DOM e testada com **Vitest**:
 
-### Passo 1 — Crie o arquivo do tema
-
-Crie a pasta e o arquivo em `src/render/themes/<nomeDoTema>/index.ts` e implemente a interface `Theme`:
-
-```typescript
-import type { Theme } from '../../theme';
-import type { Layout } from '../../layout';
-import type { Case, Decision } from '../../../data/cases';
-
-export const meuTema: Theme = {
-    displayName: 'Meu Tema', // nome que aparece no seletor da tela inicial
-
-    getAssetManifest(): string[] {
-        // Retorne [] se o tema não usa imagens externas.
-        // Retorne a lista de URLs para pré-carregamento se usar sprites.
-        return ['/src/assets/meuTema/fundo.png'];
-    },
-
-    async preload(): Promise<void> {
-        // Carregue aqui suas imagens com Promise.allSettled
-        // (nunca rejeite — assets faltando devem ter fallback visual).
-    },
-
-    drawBackground(ctx, canvas) { /* desenhe o fundo */ },
-    drawPatientCard(ctx, layout, currentCase) { /* prontuário */ },
-    drawPrescription(ctx, layout, currentCase, appliedStamp) { /* receita */ },
-    drawStamps(ctx, layout, selectedStamp) { /* carimbos */ },
-    drawConfirmButton(ctx, layout, canConfirm) { /* botão confirmar */ },
-    drawManual(ctx, layout, currentCase, activeTab) { /* manual + abas */ },
-    drawTherapeuticGraph(ctx, layout, currentCase) { /* gráfico da aba Janela */ },
-    drawFeedback(ctx, canvas, message, success) { /* overlay de feedback */ },
-};
+```bash
+npm run test
 ```
 
-> **Regra de ouro:** use sempre `layout.*` para posições e tamanhos — nunca hardcode coordenadas no tema. Isso garante que todos os temas desenham nos mesmos pontos da tela.
+Cobertura atual: comparação de decisão correta/incorreta, incremento de pontuação e advertências, e disparo de fim de jogo ao atingir o limite de erros.
 
-### Passo 2 — Registre no ThemeManager
+---
 
-Abra `src/render/themeManager.ts` e adicione o import e o registro:
+## 🤝 Créditos
 
-```typescript
-import { meuTema } from './themes/meuTema';
-
-export const availableThemes: Theme[] = [
-    classicTheme,
-    pixelNoirTheme,
-    meuTema,   // ← adicione aqui
-];
-```
-
-### Passo 3 — Adicione o botão na tela de introdução
-
-Em `index.html`, dentro do `div` do seletor de tema, adicione:
-
-```html
-<button class="theme-btn" data-theme="Meu Tema" id="btn-theme-meutema">
-    ✨ Meu Tema
-</button>
-```
-
-O atributo `data-theme` deve ser **idêntico** ao `displayName` definido no arquivo do tema.
-
-### Referência dos métodos da interface `Theme`
-
-| Método | Responsabilidade |
-|---|---|
-| `getAssetManifest()` | Lista URLs de imagens a pré-carregar (vazio se vetorial) |
-| `preload()` | Carrega imagens antes do jogo iniciar |
-| `drawBackground()` | Fundo da cena (mesa, textura, cor base) |
-| `drawPatientCard()` | Painel do prontuário do paciente |
-| `drawPrescription()` | Receita médica + carimbo aplicado |
-| `drawStamps()` | Três botões de decisão (APROVAR / AJUSTAR / REJEITAR) |
-| `drawConfirmButton()` | Botão "ENVIAR DECISÃO" |
-| `drawManual()` | Manual de referência + abas de navegação |
-| `drawTherapeuticGraph()` | Gráfico de janela terapêutica (aba "Gráfico 📊") |
-| `drawFeedback()` | Overlay de acerto/erro após decisão |
+Casos clínicos revisados em colaboração com Ananda Moreno, estudante de Farmácia (conteúdo técnico). Engenharia e arquitetura do jogo por Jadson Yan.
