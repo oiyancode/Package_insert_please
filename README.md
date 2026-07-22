@@ -75,22 +75,30 @@ Após qualquer encerramento, o botão **"Retornar ao Seletor de Nível"** reinic
 Abaixo está o mapa de organização do código:
 
 ```
-├── index.html            # Estrutura visual da página (telas de início, fim e layout)
-├── package.json          # Gerenciamento de dependências do projeto
+├── index.html            # Estrutura da página (telas de início, fim, seletor de tema)
+├── package.json          # Gerenciamento de dependências
 ├── README.md             # Esta documentação
 ├── src/
-│   ├── main.ts           # Inicializador do jogo (gerencia cliques e eventos)
-│   ├── style.css         # Estilização visual básica
+│   ├── main.ts           # Inicializador do jogo (usa ThemeManager, nunca temas direto)
+│   ├── style.css         # Estilização base
+│   ├── assets/
+│   │   └── pixelNoir/    # Sprites do tema Pixel Noir (PNG)
 │   ├── audio/
-│   │   └── synth.ts      # Gerador dos efeitos sonoros (carimbos, acertos e erros)
+│   │   └── synth.ts      # Efeitos sonoros (carimbos, acertos, erros)
 │   ├── data/
-│   │   └── cases.ts      # Banco de dados com os CASOS CLÍNICOS (Edite aqui!)
+│   │   └── cases.ts      # Banco de casos clínicos (Edite aqui!)
 │   ├── game/
 │   │   ├── state.ts      # Memória do jogo (pontuação, erros, modo ativo)
 │   │   └── logic.ts      # Regras de decisão clínica
 │   └── render/
-│       ├── canvas.ts     # Desenho do prontuário, receitas e manuais no canvas
-│       └── layout.ts     # Coordenadas físicas dos botões na tela
+│       ├── layout.ts     # Coordenadas e tamanhos dos elementos (FONTE ÚNICA)
+│       ├── theme.ts      # Interface Theme (contrato público de qualquer tema)
+│       ├── themeManager.ts  # Delegador central — main.ts só fala com ele
+│       └── themes/
+│           ├── classic/
+│           │   └── index.ts  # Tema Clássico (formas geométricas flat)
+│           └── pixelNoir/
+│               └── index.ts  # Tema Pixel Noir (sprites PNG + fallback)
 ```
 
 ---
@@ -162,3 +170,86 @@ Para adicionar um novo caso clínico, você só precisa copiar o modelo abaixo, 
 * **`correctDecision`**: Digite exatamente em letras maiúsculas: `"APROVAR"`, `"AJUSTAR"` ou `"REJEITAR"`.
 * **`kinetics.state`**: Deve ser exatamente um destes três: `"therapeutic"`, `"toxic"` ou `"ineffective"`.
 * Certifique-se de fechar as chaves `{}` e colocar uma vírgula `,` antes do próximo caso.
+
+---
+
+## 🎨 Como Criar um Novo Tema Visual
+
+O jogo usa um sistema de temas desacoplado: a lógica do jogo nunca sabe qual tema está ativo. Para criar um novo estilo visual (ex: tema retro, tema minimalista, tema pixel-art alternativo), siga os 3 passos abaixo.
+
+### Passo 1 — Crie o arquivo do tema
+
+Crie a pasta e o arquivo em `src/render/themes/<nomeDoTema>/index.ts` e implemente a interface `Theme`:
+
+```typescript
+import type { Theme } from '../../theme';
+import type { Layout } from '../../layout';
+import type { Case, Decision } from '../../../data/cases';
+
+export const meuTema: Theme = {
+    displayName: 'Meu Tema', // nome que aparece no seletor da tela inicial
+
+    getAssetManifest(): string[] {
+        // Retorne [] se o tema não usa imagens externas.
+        // Retorne a lista de URLs para pré-carregamento se usar sprites.
+        return ['/src/assets/meuTema/fundo.png'];
+    },
+
+    async preload(): Promise<void> {
+        // Carregue aqui suas imagens com Promise.allSettled
+        // (nunca rejeite — assets faltando devem ter fallback visual).
+    },
+
+    drawBackground(ctx, canvas) { /* desenhe o fundo */ },
+    drawPatientCard(ctx, layout, currentCase) { /* prontuário */ },
+    drawPrescription(ctx, layout, currentCase, appliedStamp) { /* receita */ },
+    drawStamps(ctx, layout, selectedStamp) { /* carimbos */ },
+    drawConfirmButton(ctx, layout, canConfirm) { /* botão confirmar */ },
+    drawManual(ctx, layout, currentCase, activeTab) { /* manual + abas */ },
+    drawTherapeuticGraph(ctx, layout, currentCase) { /* gráfico da aba Janela */ },
+    drawFeedback(ctx, canvas, message, success) { /* overlay de feedback */ },
+};
+```
+
+> **Regra de ouro:** use sempre `layout.*` para posições e tamanhos — nunca hardcode coordenadas no tema. Isso garante que todos os temas desenham nos mesmos pontos da tela.
+
+### Passo 2 — Registre no ThemeManager
+
+Abra `src/render/themeManager.ts` e adicione o import e o registro:
+
+```typescript
+import { meuTema } from './themes/meuTema';
+
+export const availableThemes: Theme[] = [
+    classicTheme,
+    pixelNoirTheme,
+    meuTema,   // ← adicione aqui
+];
+```
+
+### Passo 3 — Adicione o botão na tela de introdução
+
+Em `index.html`, dentro do `div` do seletor de tema, adicione:
+
+```html
+<button class="theme-btn" data-theme="Meu Tema" id="btn-theme-meutema">
+    ✨ Meu Tema
+</button>
+```
+
+O atributo `data-theme` deve ser **idêntico** ao `displayName` definido no arquivo do tema.
+
+### Referência dos métodos da interface `Theme`
+
+| Método | Responsabilidade |
+|---|---|
+| `getAssetManifest()` | Lista URLs de imagens a pré-carregar (vazio se vetorial) |
+| `preload()` | Carrega imagens antes do jogo iniciar |
+| `drawBackground()` | Fundo da cena (mesa, textura, cor base) |
+| `drawPatientCard()` | Painel do prontuário do paciente |
+| `drawPrescription()` | Receita médica + carimbo aplicado |
+| `drawStamps()` | Três botões de decisão (APROVAR / AJUSTAR / REJEITAR) |
+| `drawConfirmButton()` | Botão "ENVIAR DECISÃO" |
+| `drawManual()` | Manual de referência + abas de navegação |
+| `drawTherapeuticGraph()` | Gráfico de janela terapêutica (aba "Gráfico 📊") |
+| `drawFeedback()` | Overlay de acerto/erro após decisão |

@@ -1,48 +1,51 @@
-import type { Case } from '../data/cases';
+import type { Case, Decision } from '../data/cases';
+import { allCases } from '../data/cases';
 
 export interface GameState {
-    currentCasesList: Case[];
+    currentSemester: string;
     currentCaseIdx: number;
     score: number;
     warnings: number;
     maxWarnings: number;
-    selectedStamp: "APROVAR" | "AJUSTAR" | "REJEITAR" | null;
-    appliedStamp: "APROVAR" | "AJUSTAR" | "REJEITAR" | null;
-    gameActive: boolean;
-    activeMode: string;
-    feedbackMessage: string;
-    feedbackSuccess: boolean;
+    attendances: number;
+    selectedStamp: Decision | null;
+    appliedStamp: Decision | null;
     showingFeedback: boolean;
-    currentManualTab: string;
+    lastFeedback: {
+        success: boolean;
+        title: string;
+        bodyHtml: string;
+    } | null;
+    currentCasesList: Case[];
+    gameActive: boolean;
+    activeBularioTab: 'farmacos' | 'cinetica';
+    isBularioOpen: boolean;
+    isSemesterOpen: boolean;
 }
 
-export const state: GameState = {
-    currentCasesList: [],
-    currentCaseIdx: 0,
-    score: 0.00,
-    warnings: 0,
-    maxWarnings: 3,
-    selectedStamp: null,
-    appliedStamp: null,
-    gameActive: false,
-    activeMode: "aleatorio",
-    feedbackMessage: "",
-    feedbackSuccess: false,
-    showingFeedback: false,
-    currentManualTab: "Bulas"
-};
+export function createInitialState(): GameState {
+    return {
+        currentSemester: "Mesa Aleatória",
+        currentCaseIdx: 0,
+        score: 0.0,
+        warnings: 0,
+        maxWarnings: 3,
+        attendances: 0,
+        selectedStamp: null,
+        appliedStamp: null,
+        showingFeedback: false,
+        lastFeedback: null,
+        currentCasesList: [...allCases],
+        gameActive: false,
+        activeBularioTab: 'farmacos',
+        isBularioOpen: false,
+        isSemesterOpen: false,
+    };
+}
+
+export const state: GameState = createInitialState();
 
 export function resetState(): void {
-    state.currentCasesList = [];
-    state.currentCaseIdx = 0;
-    state.score = 0.00;
-    state.warnings = 0;
-    state.selectedStamp = null;
-    state.appliedStamp = null;
-    state.gameActive = false;
-    state.activeMode = "aleatorio";
-    state.feedbackMessage = "";
-    state.feedbackSuccess = false;
-    state.showingFeedback = false;
-    state.currentManualTab = "Bulas";
+    const fresh = createInitialState();
+    Object.assign(state, fresh);
 }

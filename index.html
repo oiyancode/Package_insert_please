@@ -3,113 +3,480 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bula, Por Favor! - Simulador Farmacológico Universitário</title>
-    <link rel="icon" type="image/png" href="/BULA, POR FAVOR!_favicon.png">
+    <title>Bula, Por Favor! - Simulador de Triagem Farmacêutica</title>
+    <!-- Favicon SVG -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2318181a'/><path d='M30 20 H70 V80 H30 Z' fill='%23f4eeda'/><text x='38' y='45' font-family='Courier, monospace' font-weight='bold' font-size='26' fill='%23d8a048'>Rx</text></svg>">
+    
+    <!-- Tailwind CSS & Google Fonts & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=VT323&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=VT323&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #0f0f10;
+            color: #e2dfd5;
+            font-family: 'Courier Prime', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-sans-ui {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-pixel {
+            font-family: 'VT323', monospace;
+        }
+
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141416;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333238;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a4952;
+        }
+
+        /* Paper Document Styling */
+        .paper-doc {
+            background-color: #f6f1e3;
+            color: #1a1917;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            border: 1px solid #dcd3be;
+            position: relative;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .paper-doc:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px -5px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Interactive Stamp Ready Target Highlight */
+        .stamp-ready-target {
+            border: 2px dashed #d8a048 !important;
+            cursor: crosshair !important;
+            box-shadow: 0 0 15px rgba(216, 160, 72, 0.3) !important;
+        }
+
+        /* Stamp animation effect */
+        .stamp-applied {
+            animation: stampBounce 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes stampBounce {
+            0% { transform: scale(2.4) rotate(-12deg); opacity: 0; }
+            100% { transform: scale(1) rotate(-4deg); opacity: 0.92; }
+        }
+
+        /* Floating Cursor Stamp Tool */
+        #floating-stamp-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s ease-out;
+            display: none;
+        }
+
+        /* Range Input Custom Styling */
+        input[type=range] {
+            accent-color: #d8a048;
+        }
+    </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4 text-gray-100">
+<body class="min-h-screen flex flex-col bg-[#0f0f10] text-[#d4cebd]">
 
-    <div class="w-full max-w-5xl bg-[#282723] border-4 border-[#3c3b35] rounded-lg shadow-2xl p-4 flex flex-col gap-4">
-        <!-- Cabeçalho Administrativo -->
-        <header class="flex flex-col sm:flex-row justify-between items-center border-b-2 border-[#3c3b35] pb-3 px-2">
+    <!-- NAV SUPERIOR INSTITUCIONAL -->
+    <header class="w-full bg-[#161618] border-b border-[#28272d] px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs z-20">
+        <!-- Logo e Titulo -->
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-[#26241e] border border-[#d8a048]/40 rounded flex items-center justify-center text-[#d8a048] font-bold text-lg shadow">
+                <i class="fa-solid fa-scale-balanced"></i>
+            </div>
             <div>
-                <h1 class="text-3xl font-bold text-[#e8c374] tracking-wider font-mono flex items-center gap-2" style="font-family: 'VT323', monospace;">
-                    <span>⚖️</span> BULA, POR FAVOR! / CLINICAL COMPLIANCE
+                <h1 class="text-sm font-bold tracking-wider text-[#d8a048] flex items-center gap-2 font-mono">
+                    BULA, POR FAVOR!
                 </h1>
-                <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest">Simulador de Triagem e Farmácia Clínica Acadêmica</p>
+                <p class="text-[10px] text-[#8c8675] tracking-tight font-sans-ui">CLINICAL COMPLIANCE • SIMULADOR DE TRIAGEM FARMACÊUTICA</p>
             </div>
-            <div class="flex items-center gap-4 mt-3 sm:mt-0">
-                <div class="bg-[#1e1d1a] border border-[#444] px-3 py-1 rounded text-[#a6d189] font-mono text-sm">
-                    Pontuação: <span id="game-score">CR$ 00.00</span>
-                </div>
-                <div class="bg-[#1e1d1a] border border-[#444] px-3 py-1 rounded text-[#e78284] font-mono text-sm">
-                    Advertências: <span id="game-warnings">0 / 3</span>
-                </div>
+        </div>
+
+        <!-- Chips de Status / Semestre -->
+        <div class="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+            <div class="bg-[#1c1b20] border border-[#2e2d36] px-3 py-1 rounded text-[#d8a048] font-bold flex items-center gap-1.5">
+                <span class="text-[#8c8675]">SEMESTRE:</span> <span id="hdr-semester">MESA ALEATÓRIA</span>
             </div>
-        </header>
-
-        <!-- Tela de Seleção de Níveis (Semestres Acadêmicos) -->
-        <div id="intro-screen" class="bg-[#1f1e1b] border-2 border-[#3a3933] p-6 rounded-lg flex flex-col items-center text-center gap-4">
-            <h2 class="text-2xl font-bold text-[#e8c374] mb-1" style="font-family: 'VT323', monospace; font-size: 2.2rem;">DEPARTAMENTO DE ENSINO - AVALIAÇÃO DE COMPETÊNCIAS</h2>
-            <p class="text-sm max-w-2xl leading-relaxed text-gray-300">
-                Selecione o nível do seu plantão farmacêutico. Cada modo filtra os casos clínicos de acordo com a grade curricular e a complexidade farmacológica exigida de cada período universitário.
-            </p>
-
-            <!-- Painel de Modos de Jogo baseados em Semestres -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full max-w-4xl mt-3 text-left">
-                <!-- 4º Semestre -->
-                <button id="btn-semestre4" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
-                    <div>
-                        <strong class="text-[#81c8be] block mb-1 text-sm">4º Semestre: Geral</strong>
-                        <p class="text-xs text-gray-400">Introdução à Farmacodinâmica, dosagens clássicas e toxicidade aguda básica (ex: Paracetamol).</p>
-                    </div>
-                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 4º Sem.</span>
-                </button>
-
-                <!-- 5º Semestre -->
-                <button id="btn-semestre5" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
-                    <div>
-                        <strong class="text-[#e5c890] block mb-1 text-sm">5º Semestre: Cinética</strong>
-                        <p class="text-xs text-gray-400">Clearance renal, excreção de fármacos e ajustes críticos baseados em depuração biológica.</p>
-                    </div>
-                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 5º Sem.</span>
-                </button>
-
-                <!-- 6º Semestre -->
-                <button id="btn-semestre6" class="bg-[#282723] hover:bg-[#34332d] p-4 border-2 border-[#4a4940] hover:border-[#e8c374] rounded transition text-left flex flex-col justify-between">
-                    <div>
-                        <strong class="text-[#f2bcbc] block mb-1 text-sm">6º Semestre: Avançado</strong>
-                        <p class="text-xs text-gray-400">Interações complexas de alta letalidade, antagonismo em receptores e polifarmácia.</p>
-                    </div>
-                    <span class="mt-4 text-xs font-bold text-[#e8c374] underline">Selecionar 6º Sem.</span>
-                </button>
-
-                <!-- Modo Clássico / Aleatório -->
-                <button id="btn-aleatorio" class="bg-[#2d2921] hover:bg-[#3c372c] p-4 border-2 border-[#e8c374] rounded transition text-left flex flex-col justify-between">
-                    <div>
-                        <strong class="text-[#e8c374] block mb-1 text-sm">Mesa Clínica Completa</strong>
-                        <p class="text-xs text-gray-300">Modo clássico sem filtros. Todos os semestres integrados de forma aleatória e desafiadora.</p>
-                    </div>
-                    <span class="mt-4 text-xs font-bold text-white uppercase tracking-wider">Mesa Aleatória 🎲</span>
-                </button>
+            <div class="bg-[#1c1b20] border border-[#2e2d36] px-3 py-1 rounded text-[#10b981] font-bold flex items-center gap-1.5">
+                <span class="text-[#8c8675]">SALDO CR$:</span> <span id="hdr-score">CR$ 0.00</span>
             </div>
+            <div class="bg-[#1c1b20] border border-[#2e2d36] px-3 py-1 rounded text-rose-400 font-bold flex items-center gap-1.5">
+                <span class="text-[#8c8675]">ADVERTÊNCIAS:</span> <span id="hdr-warnings">0 / 3</span>
+            </div>
+            <div class="bg-[#1c1b20] border border-[#2e2d36] px-3 py-1 rounded text-sky-400 font-bold flex items-center gap-1.5">
+                <span class="text-[#8c8675]">ATENDIMENTOS:</span> <span id="hdr-count">0</span>
+            </div>
+        </div>
+
+        <!-- Controle de Volume e Botões de Ação Superior -->
+        <div class="flex items-center gap-3 font-sans-ui">
             
-            <p class="text-xs text-gray-500 mt-2">Dica: Use o novo painel "Gráfico" no manual de consulta para monitorar a concentração plasmática!</p>
+            <!-- Widget de Controle de Volume -->
+            <div class="bg-[#1c1b20] border border-[#2e2d36] rounded px-2.5 py-1 flex items-center gap-2 text-[#a39e8c]" title="Ajustar Volume dos Efeitos Sonoros">
+                <button id="volume-mute-btn" class="hover:text-[#d8a048] transition w-4 text-center">
+                    <i id="volume-icon" class="fa-solid fa-volume-high text-xs"></i>
+                </button>
+                <input id="volume-slider" type="range" min="0" max="1" step="0.05" value="0.7" class="w-16 h-1.5 bg-[#282730] rounded-lg appearance-none cursor-pointer">
+                <span id="volume-label" class="font-mono text-[10px] text-[#8c8675] w-7 text-right">70%</span>
+            </div>
 
-            <!-- Disclaimer Obrigatório -->
-            <div class="mt-4 w-full max-w-4xl border border-[#e78284]/40 bg-[#e78284]/5 rounded px-4 py-2 flex items-start gap-2">
-                <span class="text-[#e78284] text-sm mt-0.5 shrink-0">⚠️</span>
-                <p class="text-xs text-[#e78284]/80 leading-relaxed text-left">
-                    <strong class="text-[#e78284]">Simulação educacional com fins didáticos.</strong>
-                    Casos fictícios. Não substitui julgamento clínico profissional, orientação farmacêutica ou aconselhamento médico.
+            <button id="open-bulario-btn" class="px-3 py-1.5 bg-[#2a2419] hover:bg-[#382f20] border border-[#d8a048]/50 rounded text-[#d8a048] font-bold text-xs transition flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-book-medical"></i> Manual & Bulário
+            </button>
+            <button id="open-semester-btn" class="p-1.5 bg-[#1c1b20] hover:bg-[#282730] border border-[#33323d] rounded text-[#a39e8c] hover:text-[#e2dfd5] transition" title="Menu Principal / Seleção de Semestre">
+                <i class="fa-solid fa-house text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ÁREA SUPERIOR DO PACIENTE DA VEZ -->
+    <section id="patient-banner" class="w-full bg-[#141416] border-b border-[#24232a] px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4 max-w-3xl">
+            <!-- Avatar do Paciente -->
+            <div class="relative">
+                <div class="w-12 h-12 rounded-full bg-[#d8a048]/20 border-2 border-[#d8a048] flex items-center justify-center text-2xl text-[#d8a048]">
+                    <i id="patient-avatar-icon" class="fa-solid fa-user-doctor"></i>
+                </div>
+                <span id="patient-badge" class="absolute -bottom-1 -right-1 bg-[#d8a048] text-[#141416] text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono uppercase">
+                    PACIENTE #1
+                </span>
+            </div>
+
+            <!-- Identificação e Fala -->
+            <div>
+                <div class="flex items-baseline gap-3">
+                    <h2 id="patient-name" class="text-base font-bold text-[#e6dec8] font-mono">Carregando...</h2>
+                    <span id="patient-meta" class="text-xs text-[#8c8675] font-mono">--</span>
+                </div>
+                <!-- Balão de Fala -->
+                <div class="mt-1 bg-[#1a191e] border border-[#2e2d38] rounded-md px-3 py-1.5 text-xs text-[#c9c3b2] italic font-mono flex items-center gap-2 shadow-inner">
+                    <span>"</span><span id="patient-speech">--</span><span>"</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tag do Posto de Triagem / Indicador de Carimbo Ativo -->
+        <div class="text-right text-xs font-mono hidden md:block">
+            <span id="stamp-status-indicator" class="text-[#d8a048] font-bold block flex items-center justify-end gap-1">
+                <i class="fa-solid fa-hand-pointer"></i> SELECIONE UM CARIMBO
+            </span>
+            <span class="text-[#706c60] text-[11px]">Equipe o carimbo e clique na Prescrição Médica para chancelar.</span>
+        </div>
+    </section>
+
+    <!-- ÁREA PRINCIPAL: BANCADA COM OS 3 PAPEIS E PAINEL DE DECISÃO -->
+    <main class="flex-1 max-w-[1700px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        <!-- OS 3 DOCUMENTOS VISÍVEIS LADO A LADO (9 colunas em desktop) -->
+        <section class="lg:col-span-9 grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+            
+            <!-- PAPEL 1: PRONTUÁRIO / FICHA & ANAMNESE -->
+            <article id="doc1-paper" class="paper-doc rounded-md p-4 flex flex-col justify-between text-xs font-mono leading-relaxed min-h-[520px]">
+            </article>
+
+            <!-- PAPEL 2: CLINICAL REPORT / LAUDO & EXAMES -->
+            <article id="doc2-paper" class="paper-doc rounded-md p-4 flex flex-col justify-between text-xs font-mono leading-relaxed min-h-[520px]">
+            </article>
+
+            <!-- PAPEL 3: RECEITUÁRIO / PRESCRIÇÃO MÉDICA (ALVO DO CARIMBO) -->
+            <article id="doc3-paper" class="paper-doc rounded-md p-4 flex flex-col justify-between text-xs font-mono leading-relaxed min-h-[520px] relative overflow-hidden transition-all duration-200">
+            </article>
+
+        </section>
+
+        <!-- PAINEL DIREITO: DECISÃO FARMACÊUTICA & FERRAMENTAS DE CARIMBO -->
+        <section class="lg:col-span-3 flex flex-col gap-4">
+            
+            <!-- CAIXA DE CARIMBOS DE DECISÃO -->
+            <div class="bg-[#161618] border border-[#2a2930] rounded-lg p-4 flex flex-col gap-3 shadow-xl">
+                <div>
+                    <h3 class="text-xs font-bold text-[#d8a048] uppercase tracking-wider font-mono flex items-center gap-1.5">
+                        <i class="fa-solid fa-stamp text-sm"></i> PORTA-CARIMBOS (DECISÃO)
+                    </h3>
+                    <p class="text-[11px] text-[#8c8675] font-sans-ui mt-0.5">Clique em um carimbo para pegá-lo, depois toque na Prescrição.</p>
+                </div>
+
+                <div class="flex flex-col gap-2.5 font-sans-ui mt-1">
+                    
+                    <!-- CARIMBO 1: APROVAR / LIBERAR (VERDE) -->
+                    <button id="stamp-btn-APROVAR" class="stamp-select-btn group relative w-full p-3 bg-[#0c2417] hover:bg-[#123321] border-2 border-[#166534] hover:border-[#22c55e] rounded-lg text-left transition-all active:scale-[0.98] shadow-md flex items-start gap-3">
+                        <div class="w-8 h-8 rounded bg-[#166534] text-[#86efac] flex items-center justify-center font-bold text-lg shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-xs text-[#86efac] block font-mono">1. APROVAR / LIBERAR</span>
+                            <span class="text-[10px] text-[#a7f3d0] leading-tight block">Receita correta. Dispensação segura.</span>
+                        </div>
+                    </button>
+
+                    <!-- CARIMBO 2: RECUSAR / INTERVIR (VERMELHO) -->
+                    <button id="stamp-btn-RECUSAR" class="stamp-select-btn group relative w-full p-3 bg-[#2a0f12] hover:bg-[#381418] border-2 border-[#991b1b] hover:border-[#ef4444] rounded-lg text-left transition-all active:scale-[0.98] shadow-md flex items-start gap-3">
+                        <div class="w-8 h-8 rounded bg-[#991b1b] text-[#fca5a5] flex items-center justify-center font-bold text-lg shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-xs text-[#fca5a5] block font-mono">2. RECUSAR / INTERVIR</span>
+                            <span class="text-[10px] text-[#fecaca] leading-tight block">Alergia, toxicidade grave ou contraindicação.</span>
+                        </div>
+                    </button>
+
+                    <!-- CARIMBO 3: SOLICITAR AJUSTE DE DOSE (AMARELO / AMBER) -->
+                    <button id="stamp-btn-AJUSTAR" class="stamp-select-btn group relative w-full p-3 bg-[#2a1e0c] hover:bg-[#3b2a10] border-2 border-[#854d0e] hover:border-[#eab308] rounded-lg text-left transition-all active:scale-[0.98] shadow-md flex items-start gap-3">
+                        <div class="w-8 h-8 rounded bg-[#854d0e] text-[#fde047] flex items-center justify-center font-bold text-lg shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-xs text-[#fde047] block font-mono">3. SOLICITAR AJUSTE DE DOSE</span>
+                            <span class="text-[10px] text-[#fef08a] leading-tight block">Dose incorreta para depuração renal/idade.</span>
+                        </div>
+                    </button>
+
+                    <!-- BOTÃO PARA SOLTAR CARIMBO -->
+                    <button id="unselect-stamp-btn" class="hidden w-full py-1.5 px-3 bg-[#222128] hover:bg-[#2c2b36] border border-[#3d3b4a] rounded text-[11px] text-[#a39e8c] hover:text-[#e6dec8] font-mono transition text-center flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i> Soltar Carimbo (ESC)
+                    </button>
+
+                </div>
+            </div>
+
+            <!-- GUIA RÁPIDO DE CONSULTA -->
+            <div class="bg-[#141416] border border-[#24232a] rounded-lg p-3.5 text-xs text-[#8c8675] font-sans-ui flex flex-col gap-1.5 shadow">
+                <span class="font-bold text-[#d8a048] flex items-center gap-1.5 font-mono text-[11px] uppercase">
+                    <i class="fa-regular fa-lightbulb"></i> Guia Rápido de Consulta
+                </span>
+                <p class="text-[11px] leading-relaxed">
+                    Dúvidas na dosagem ou renal clearance? Clique no botão <strong class="text-[#d8a048]">Manual & Bulário</strong> no topo para consultar parâmetros!
                 </p>
             </div>
-        </div>
 
-        <!-- Área de Gameplay do Canvas -->
-        <div id="gameplay-area" class="hidden flex flex-col gap-4">
-            <div class="w-full border-2 border-black rounded shadow-inner overflow-hidden bg-[#24231f]">
-                <canvas id="gameCanvas" width="1000" height="630" class="w-full block"></canvas>
+        </section>
+
+    </main>
+
+    <!-- FLOATING STAMP TOOL (SEGUE O CURSOR) -->
+    <div id="floating-stamp-cursor" class="pointer-events-none">
+        <div id="floating-stamp-box" class="border-4 px-4 py-2 rounded-lg font-extrabold text-sm tracking-widest uppercase rotate-[-6deg] shadow-2xl bg-white/90 backdrop-blur-xs flex items-center gap-2">
+            <span id="floating-stamp-text">✓ APROVADO</span>
+        </div>
+    </div>
+
+    <!-- MODAL DE SELEÇÃO DE SEMESTRE / MENU INICIAL -->
+    <div id="modal-semester" class="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#161618] border-2 border-[#2e2d38] rounded-xl max-w-3xl w-full p-5 sm:p-6 flex flex-col gap-5 shadow-2xl font-sans-ui">
+            <div class="text-center border-b border-[#282730] pb-4">
+                <h2 class="text-xl sm:text-2xl font-bold font-mono text-[#d8a048] tracking-wider">
+                    DEPARTAMENTO DE ENSINO - AVALIAÇÃO DE COMPETÊNCIAS
+                </h2>
+                <p class="text-xs text-[#8c8675] mt-1">
+                    Selecione o nível do seu plantão farmacêutico. Cada modo filtra os casos clínicos de acordo com a grade curricular.
+                </p>
             </div>
-            <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-gray-400 font-mono bg-[#1e1d1a] p-3 rounded border border-[#3c3b35] gap-2">
-                <span>🔧 CONTROLES: Clique em um dos carimbos abaixo, depois dê um clique sobre a receita para marcar o seu aval clínico.</span>
-                <span class="text-[#e8c374] font-bold">Nível Atual: <span id="active-mode-label" class="text-white">---</span></span>
+
+            <!-- Grid de Modos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                
+                <!-- Card 4º Semestre -->
+                <button id="btn-sem4" class="bg-[#1a191e] hover:bg-[#222128] border border-[#33323f] hover:border-[#d8a048] rounded-lg p-4 text-left transition flex flex-col justify-between gap-3 group">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm text-[#e6dec8] font-mono group-hover:text-[#d8a048]">4º Semestre: Geral</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#2b271d] text-[#d8a048] font-mono border border-[#4d432b]">Básico</span>
+                        </div>
+                        <p class="text-xs text-[#8c8675] leading-relaxed">
+                            Introdução à Farmacodinâmica, dosagens clássicas, toxicidade aguda básica (ex: Paracetamol), reações alérgicas diretas e contraindicações absolutas.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-[#d8a048] font-mono group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Iniciar Plantão 4º Sem. &rarr;
+                    </span>
+                </button>
+
+                <!-- Card 5º Semestre -->
+                <button id="btn-sem5" class="bg-[#1a191e] hover:bg-[#222128] border border-[#33323f] hover:border-[#10b981] rounded-lg p-4 text-left transition flex flex-col justify-between gap-3 group">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm text-[#e6dec8] font-mono group-hover:text-[#10b981]">5º Semestre: Cinética</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#132d22] text-[#10b981] font-mono border border-[#1b5e43]">Intermediário</span>
+                        </div>
+                        <p class="text-xs text-[#8c8675] leading-relaxed">
+                            Clearance renal (eGFR/Creatinina), excreção hepática de fármacos e ajustes críticos de dose baseados na depuração biológica e idade do paciente.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-[#10b981] font-mono group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Iniciar Plantão 5º Sem. &rarr;
+                    </span>
+                </button>
+
+                <!-- Card 6º Semestre -->
+                <button id="btn-sem6" class="bg-[#1a191e] hover:bg-[#222128] border border-[#33323f] hover:border-[#f43f5e] rounded-lg p-4 text-left transition flex flex-col justify-between gap-3 group">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm text-[#e6dec8] font-mono group-hover:text-[#f43f5e]">6º Semestre: Avançado</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#33141a] text-[#f43f5e] font-mono border border-[#631e2b]">Avançado</span>
+                        </div>
+                        <p class="text-xs text-[#8c8675] leading-relaxed">
+                            Interações medicamentosas complexas de alta letalidade, antagonismo em receptores, prolongamento QT e polifarmácia em pacientes graves.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-[#f43f5e] font-mono group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Iniciar Plantão 6º Sem. &rarr;
+                    </span>
+                </button>
+
+                <!-- Card Mesa Aleatória -->
+                <button id="btn-aleatorio" class="bg-[#1a191e] hover:bg-[#222128] border border-[#33323f] hover:border-[#38bdf8] rounded-lg p-4 text-left transition flex flex-col justify-between gap-3 group">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-sm text-[#e6dec8] font-mono group-hover:text-[#38bdf8]">Mesa Clássica Completa 🎲</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-[#102a36] text-[#38bdf8] font-mono border border-[#1c4b61]">Modo Livre</span>
+                        </div>
+                        <p class="text-xs text-[#8c8675] leading-relaxed">
+                            Modo sem filtros. Todos os semestres integrados aleatoriamente. Desafio completo para testar seus instintos de farmacêutico clínico.
+                        </p>
+                    </div>
+                    <span class="text-xs font-bold text-[#38bdf8] font-mono group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        Mesa Aleatória &rarr;
+                    </span>
+                </button>
+
+            </div>
+
+            <!-- Guia de Instruções como Jogar -->
+            <div class="bg-[#121214] border border-[#26252e] rounded-lg p-3 text-xs leading-relaxed text-[#a39e8c]">
+                <span class="font-bold text-[#d8a048] block mb-1 flex items-center gap-1 font-mono">
+                    <i class="fa-solid fa-circle-info"></i> MECÂNICA DO CARIMBO:
+                </span>
+                <ul class="list-disc list-inside space-y-1 text-[11px]">
+                    <li>Clique em uma das opções no porta-carimbos (Aprovar, Recusar ou Ajustar) para <strong>equipar o carimbo</strong> na sua mão.</li>
+                    <li>Mova o mouse até a <strong>Prescrição Médica (Papel #3)</strong> e dê um clique para chancelar fisicamente o documento.</li>
+                    <li>Para trocar de carimbo, basta clicar em outro botão ou apertar <strong>ESC</strong> para desequipar.</li>
+                </ul>
             </div>
         </div>
+    </div>
 
-        <!-- Tela de Fim de Jogo (Game Over / Vitória) -->
-        <div id="end-screen" class="hidden bg-[#1f1e1b] border-2 border-[#3a3933] p-6 rounded-lg flex flex-col items-center text-center gap-4">
-            <h2 id="end-title" class="text-3xl font-bold mb-2 font-mono" style="font-family: 'VT323', monospace;">PLANTÃO ENCERRADO</h2>
-            <p id="end-message" class="text-md max-w-md text-gray-300"></p>
-            <div class="bg-[#282723] p-4 rounded border border-[#444] text-left text-sm font-mono w-full max-w-sm">
-                <p class="flex justify-between"><span>Decisões Corretas:</span> <span id="end-correct" class="text-[#a6d189]">0</span></p>
-                <p class="flex justify-between"><span>Erros Cometidos:</span> <span id="end-errors" class="text-[#e78284]">0</span></p>
-                <p class="flex justify-between border-t border-[#444] mt-2 pt-2 text-lg font-bold"><span>Balanço de Notas:</span> <span id="end-balance" class="text-[#e5c890]">CR$ 00.00</span></p>
+    <!-- MODAL MANUAL DE FARMACOLOGIA & BULÁRIO -->
+    <div id="modal-bulario" class="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#161618] border-2 border-[#2e2d38] rounded-xl max-w-4xl w-full p-5 sm:p-6 flex flex-col gap-4 shadow-2xl font-sans-ui max-h-[90vh] overflow-hidden">
+            
+            <div class="flex justify-between items-center border-b border-[#282730] pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded bg-[#d8a048]/20 text-[#d8a048] flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-book-medical"></i>
+                    </div>
+                    <h2 class="text-base sm:text-lg font-bold font-mono text-[#d8a048]">
+                        MANUAL DE FARMACOLOGIA CLÍNICA & BULÁRIO
+                    </h2>
+                </div>
+                <button id="close-bulario-btn" class="text-[#8c8675] hover:text-[#e6dec8] text-xl font-bold px-2">✕</button>
             </div>
-            <button id="btn-reset" class="mt-4 px-8 py-3 bg-[#e8c374] hover:bg-[#cca34c] text-gray-900 font-bold rounded-lg shadow-lg transition">
-                RETORNAR AO SELETOR DE NÍVEL
-            </button>
+
+            <!-- Abas do Bulário -->
+            <div class="flex border-b border-[#282730] gap-2 text-xs font-mono">
+                <button id="tab-btn-farmacos" class="py-2 px-4 font-bold text-[#d8a048] border-b-2 border-[#d8a048] bg-[#1a191e] rounded-t flex items-center gap-2">
+                    <i class="fa-solid fa-pills"></i> Fármacos & Dosagens
+                </button>
+                <button id="tab-btn-cinetica" class="py-2 px-4 font-bold text-[#8c8675] hover:text-[#e6dec8] border-b-2 border-transparent rounded-t flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i> Gráfico de Curva Plasmática / Clearance
+                </button>
+            </div>
+
+            <!-- Conteúdo Aba 1: Lista de Fármacos -->
+            <div id="bulario-tab-farmacos" class="overflow-y-auto pr-1 space-y-3 max-h-[55vh] text-xs">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    
+                    <div class="bg-[#1a191e] p-3 rounded border border-[#2b2a36]">
+                        <h4 class="font-bold text-[#d8a048] text-sm font-mono">Vancomicina</h4>
+                        <p class="text-[11px] text-[#8c8675] italic mb-1.5">Glicopeptídeo Antibacteriano</p>
+                        <ul class="space-y-1 text-[#c9c3b2] text-[11px] list-disc list-inside">
+                            <li><strong>Dose Padrão:</strong> 1g a 1.5g IV de 12/12h.</li>
+                            <li><strong>Ajuste Renal Crítico:</strong> Para eGFR &lt; 50 mL/min, é OBRIGATÓRIO reduzir a dose ou aumentar o intervalo (ex: 500mg de 12/12h ou 1g de 24/24h) devido ao risco gravíssimo de Nefrotoxicidade.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[#1a191e] p-3 rounded border border-[#2b2a36]">
+                        <h4 class="font-bold text-[#d8a048] text-sm font-mono">Paracetamol / Acetaminofeno</h4>
+                        <p class="text-[11px] text-[#8c8675] italic mb-1.5">Analgésico e Antipirético</p>
+                        <ul class="space-y-1 text-[#c9c3b2] text-[11px] list-disc list-inside">
+                            <li><strong>Dose Adulto Padrão:</strong> 500mg a 750mg a cada 6h.</li>
+                            <li><strong>Dose Máxima Diária:</strong> 4.000 mg (4g/dia).</li>
+                            <li><strong>Toxicidade:</strong> Risco de Hepatotoxicidade Severa e Necrose Hepática em doses elevadas.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[#1a191e] p-3 rounded border border-[#2b2a36]">
+                        <h4 class="font-bold text-[#d8a048] text-sm font-mono">Metformina</h4>
+                        <p class="text-[11px] text-[#8c8675] italic mb-1.5">Antidiabético Biguanida</p>
+                        <ul class="space-y-1 text-[#c9c3b2] text-[11px] list-disc list-inside">
+                            <li><strong>Dose Adulto:</strong> 500mg a 850mg 2x a 3x ao dia.</li>
+                            <li><strong>Ajuste Renal Crítico:</strong> Contraindicada se eGFR &lt; 30 mL/min/1.73m² devido ao risco de Acidose Láctica grave.</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[#1a191e] p-3 rounded border border-[#2b2a36]">
+                        <h4 class="font-bold text-[#d8a048] text-sm font-mono">Amoxicilina & Penicilinas</h4>
+                        <p class="text-[11px] text-[#8c8675] italic mb-1.5">Antibiótico Beta-lactâmico</p>
+                        <ul class="space-y-1 text-[#c9c3b2] text-[11px] list-disc list-inside">
+                            <li><strong>Alergia Conhecida:</strong> Contraindicação ABSOLUTA em pacientes com histórico relatado de anafilaxia ou alergia a penicilinas.</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Conteúdo Aba 2: Simulação Gráfica PK -->
+            <div id="bulario-tab-cinetica" class="hidden flex flex-col items-center gap-3">
+                <p class="text-xs text-[#8c8675]">Simulador visual de Janela Terapêutica vs Depuração Renal (Clearance):</p>
+                <div class="bg-[#100f12] p-3 rounded border border-[#262530] w-full max-w-xl flex flex-col items-center">
+                    <canvas id="pkModalCanvas" width="500" height="200" class="max-w-full rounded bg-[#0a0a0c]"></canvas>
+                    <div class="flex justify-between w-full text-[10px] text-[#8c8675] mt-2 font-mono">
+                        <span class="text-emerald-400">■ Janela Terapêutica Segura</span>
+                        <span class="text-rose-400">-- Nível Tóxico</span>
+                        <span class="text-sky-400">― Curva Plasmática ($C_p$)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL DE FEEDBACK DA DECISÃO -->
+    <div id="modal-feedback" class="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-[#161618] border-2 border-[#2e2d38] rounded-xl max-w-lg w-full p-5 sm:p-6 flex flex-col gap-4 shadow-2xl font-sans-ui">
+            <div id="fb-header" class="flex items-center gap-3 border-b border-[#282730] pb-3">
+                <div id="fb-icon-box" class="w-12 h-12 rounded-full flex items-center justify-center text-2xl shrink-0">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div>
+                    <h3 id="fb-title" class="font-bold text-lg font-mono">Decisão Avaliada</h3>
+                    <p id="fb-subtitle" class="text-xs text-[#8c8675]">Análise de Compliance Farmacêutico</p>
+                </div>
+            </div>
+
+            <div id="fb-body" class="text-xs sm:text-sm leading-relaxed text-[#c9c3b2] bg-[#121214] p-4 rounded border border-[#26252e] max-h-60 overflow-y-auto font-mono">
+                <!-- Texto explicativo detalhado -->
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button id="next-patient-btn" class="py-2.5 px-6 bg-[#d8a048] hover:bg-[#ebaf52] text-[#141416] font-bold text-xs uppercase tracking-wider rounded font-mono transition shadow-lg active:scale-95 flex items-center gap-2">
+                    Próximo Paciente <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 

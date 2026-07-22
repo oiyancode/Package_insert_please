@@ -1,57 +1,107 @@
-import { state } from './state';
+import type { Case, Decision } from '../data/cases';
+import type { GameState } from './state';
 
-export function shuffleArray<T>(array: T[]): void {
+export function shuffleArray<T>(array: T[]): T[] {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
+    return array;
 }
 
-export function processDecision(): "success" | "error" {
-    const currentCase = state.currentCasesList[state.currentCaseIdx];
-    state.showingFeedback = true;
-
-    if (state.appliedStamp === currentCase.correctDecision) {
-        state.score += 50.00;
-        state.feedbackSuccess = true;
-        state.feedbackMessage = "APROVADO PELO CONTROLE SANITÁRIO ACADÊMICO:\n" + currentCase.explanation;
-        return "success";
+export function filterCasesBySemester(allCasesList: Case[], semName: string): Case[] {
+    if (semName.includes('4º')) {
+        return allCasesList.filter(c => c.semesterTag.includes('4º'));
+    } else if (semName.includes('5º')) {
+        return allCasesList.filter(c => c.semesterTag.includes('5º'));
+    } else if (semName.includes('6º')) {
+        return allCasesList.filter(c => c.semesterTag.includes('6º'));
     } else {
-        state.warnings++;
-        state.feedbackSuccess = false;
-        state.feedbackMessage = "ALERTA DE INFRAÇÃO FARMACÊUTICA GRAVE:\n" + currentCase.incorrectText;
-        return "error";
+        const copy = [...allCasesList];
+        return shuffleArray(copy);
     }
 }
 
-export interface AdvanceCaseResult {
-    ended: boolean;
-    victory: boolean;
-    message: string;
+export function getCurrentCase(s: GameState): Case | null {
+    if (!s.currentCasesList || s.currentCasesList.length === 0) return null;
+    const idx = s.currentCaseIdx % s.currentCasesList.length;
+    return s.currentCasesList[idx];
 }
 
-export function advanceCase(): AdvanceCaseResult | null {
-    state.showingFeedback = false;
-    state.appliedStamp = null;
-    state.selectedStamp = null;
-
-    if (state.warnings >= state.maxWarnings) {
-        state.gameActive = false;
-        return {
-            ended: true,
-            victory: false,
-            message: "Sua licença universitária de triagem clínica foi cassada. Seus erros farmacológicos causaram reações catastróficas e falência de órgãos em múltiplos pacientes."
-        };
-    } else if (state.currentCaseIdx + 1 < state.currentCasesList.length) {
-        state.currentCaseIdx++;
-        state.currentManualTab = "Bulas";
-        return null;
+export function selectStamp(
+    s: GameState,
+    type: Decision,
+    soundEngine?: { playPickup: () => void }
+): void {
+    if (soundEngine) soundEngine.playPickup();
+    if (s.selectedStamp === type) {
+        s.selectedStamp = null;
     } else {
-        state.gameActive = false;
-        return {
-            ended: true,
-            victory: true,
-            message: "Parabéns! Você concluiu com excelência todos os prontuários de triagem designados para o seu período de estudo."
-        };
+        s.selectedStamp = type;
     }
+}
+
+export function clearSelectedStamp(s: GameState): void {
+    s.selectedStamp = null;
+}
+
+export function applyDecision(
+    s: GameState,
+    decisionType: Decision,
+    soundEngine?: { playStamp: () => void; playSuccess: () => void; playError: () => void }
+): { isCorrect: boolean; title: string; bodyHtml: string } {
+    if (soundEngine) soundEngine.playStamp();
+
+    const currentCase = getCurrentCase(s);
+    if (!currentCase) {
+        return { isCorrect: false, title: 'ERRO', bodyHtml: 'Nenhum caso carregado.' };
+    }
+
+    const isCorrect = (decisionType === currentCase.correctDecision);
+    s.attendances++;
+    s.appliedStamp = decisionType;
+    clearSelectedStamp(s);
+
+    let title = '';
+    if (isCorrect) {
+        if (soundEngine) soundEngine.playSuccess();
+        s.score += 150.00;
+        title = 'DECISÃO CLINICAMENTE CORRETA!';
+    } else {
+        if (soundEngine) soundEngine.playError();
+        s.warnings++;
+        title = 'ALERTA DE SEGURANÇA FARMACÊUTICA';
+        if (s.warnings >= s.maxWarnings) {
+            s.gameActive = false;
+        }
+    }
+
+    s.showingFeedback = true;
+    s.lastFeedback = {
+        success: isCorrect,
+        title,
+        bodyHtml: currentCase.explanation,
+    };
+
+    return { isCorrect, title, bodyHtml: currentCase.explanation };
+}
+
+export function nextPatient(s: GameState): void {
+    s.showingFeedback = false;
+    s.lastFeedback = null;
+    s.appliedStamp = null;
+    s.selectedStamp = null;
+    s.currentCaseIdx++;
+}
+
+export function selectSemester(s: GameState, semName: string, allCasesList: Case[]): void {
+    s.currentSemester = semName;
+    s.currentCasesList = filterCasesBySemester(allCasesList, semName);
+    s.currentCaseIdx = 0;
+    s.showingFeedback = false;
+    s.lastFeedback = null;
+    s.appliedStamp = null;
+    s.selectedStamp = null;
+    s.isSemesterOpen = false;
+    s.gameActive = true;
 }

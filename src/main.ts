@@ -1,177 +1,174 @@
 import './style.css';
-import { state, resetState } from './game/state';
+import { state } from './game/state';
 import { allCases } from './data/cases';
-import { shuffleArray, processDecision, advanceCase } from './game/logic';
-import { playSynthSound } from './audio/synth';
-import { drawGame } from './render/canvas';
-import { layout } from './render/layout';
+import type { Decision } from './data/cases';
+import {
+    getCurrentCase,
+    selectStamp,
+    clearSelectedStamp,
+    applyDecision,
+    nextPatient,
+    selectSemester
+} from './game/logic';
+import { soundEngine } from './audio/soundEngine';
+import { renderHeaderStats, renderPatientBanner, renderSemesterModal } from './render/header';
+import { renderPatientDoc } from './render/patientDoc';
+import { renderLabsDoc } from './render/labsDoc';
+import { renderPrescriptionDoc } from './render/prescriptionDoc';
+import { renderStampPanel, setupStampCursorTracking } from './render/stampPanel';
+import { renderManualModal } from './render/manualModal';
+import { renderFeedbackModal } from './render/feedbackModal';
 
-// DOM Elements
-const canvas = document.getElementById("gameCanvas") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d")!;
-
-const scoreEl = document.getElementById("game-score") as HTMLSpanElement;
-const warningsEl = document.getElementById("game-warnings") as HTMLSpanElement;
-const modeLabelEl = document.getElementById("active-mode-label") as HTMLSpanElement;
-
-const introScreenEl = document.getElementById("intro-screen") as HTMLDivElement;
-const gameplayAreaEl = document.getElementById("gameplay-area") as HTMLDivElement;
-const endScreenEl = document.getElementById("end-screen") as HTMLDivElement;
-
-const endTitleEl = document.getElementById("end-title") as HTMLHeadingElement;
-const endMessageEl = document.getElementById("end-message") as HTMLParagraphElement;
-const endCorrectEl = document.getElementById("end-correct") as HTMLSpanElement;
-const endErrorsEl = document.getElementById("end-errors") as HTMLSpanElement;
-const endBalanceEl = document.getElementById("end-balance") as HTMLSpanElement;
-
-const btnSemestre4 = document.getElementById("btn-semestre4") as HTMLButtonElement;
-const btnSemestre5 = document.getElementById("btn-semestre5") as HTMLButtonElement;
-const btnSemestre6 = document.getElementById("btn-semestre6") as HTMLButtonElement;
-const btnAleatorio = document.getElementById("btn-aleatorio") as HTMLButtonElement;
-const btnReset = document.getElementById("btn-reset") as HTMLButtonElement;
-
-// Helper functions for UI
+// --- UI RE-RENDER ORCHESTRATOR ---
 function updateUI(): void {
-    scoreEl.innerText = `CR$ ${state.score.toFixed(2)}`;
-    warningsEl.innerText = `${state.warnings} / ${state.maxWarnings}`;
-}
+    const currentCase = getCurrentCase(state);
 
-function endGame(victory: boolean, msg: string): void {
-    state.gameActive = false;
-    gameplayAreaEl.classList.add("hidden");
-    endScreenEl.classList.remove("hidden");
+    // 1. Header & Stats
+    renderHeaderStats(
+        state.currentSemester,
+        state.score,
+        state.warnings,
+        state.attendances,
+        soundEngine.volume,
+        soundEngine.isMuted
+    );
 
-    if (victory) {
-        endTitleEl.innerText = "PLANTÃO ACADÊMICO APROVADO!";
-        endTitleEl.className = "text-3xl font-bold mb-2 font-mono text-[#a6d189]";
-    } else {
-        endTitleEl.innerText = "REPROVADO POR ERRO FATAL";
-        endTitleEl.className = "text-3xl font-bold mb-2 font-mono text-[#e78284]";
+    // 2. Patient Banner
+    renderPatientBanner(currentCase, state.currentCaseIdx);
+
+    // 3. Document 1 (Patient Prontuário)
+    const doc1El = document.getElementById('doc1-paper');
+    if (doc1El && currentCase) {
+        renderPatientDoc(doc1El, currentCase.doc1, currentCase.age, currentCase.weight);
     }
 
-    endMessageEl.innerText = msg;
-    endCorrectEl.innerText = `${state.score / 50}`;
-    endErrorsEl.innerText = `${state.warnings}`;
-    endBalanceEl.innerText = `CR$ ${state.score.toFixed(2)}`;
-}
-
-function resetGame(): void {
-    gameplayAreaEl.classList.add("hidden");
-    endScreenEl.classList.add("hidden");
-    introScreenEl.classList.remove("hidden");
-    resetState();
-}
-
-function startGame(mode: string): void {
-    state.activeMode = mode;
-
-    // Filtrar os casos por semestre ou carregar tudo
-    if (mode === "semestre4") {
-        state.currentCasesList = allCases.filter(c => c.semester === 4);
-        modeLabelEl.innerText = "4º Semestre (Básico)";
-    } else if (mode === "semestre5") {
-        state.currentCasesList = allCases.filter(c => c.semester === 5);
-        modeLabelEl.innerText = "5º Semestre (Cinética & Renal)";
-    } else if (mode === "semestre6") {
-        state.currentCasesList = allCases.filter(c => c.semester === 6);
-        modeLabelEl.innerText = "6º Semestre (Avançado & Interações)";
-    } else {
-        // Mesa Clínica Geral: aleatório
-        state.currentCasesList = [...allCases];
-        shuffleArray(state.currentCasesList);
-        modeLabelEl.innerText = "Mesa Clínica Geral (Aleatória)";
+    // 4. Document 2 (Labs & Clinical Report)
+    const doc2El = document.getElementById('doc2-paper');
+    if (doc2El && currentCase) {
+        renderLabsDoc(doc2El, currentCase.doc2);
     }
 
-    introScreenEl.classList.add("hidden");
-    endScreenEl.classList.add("hidden");
-    gameplayAreaEl.classList.remove("hidden");
-
-    state.currentCaseIdx = 0;
-    state.score = 0;
-    state.warnings = 0;
-    state.appliedStamp = null;
-    state.selectedStamp = null;
-    state.showingFeedback = false;
-    state.currentManualTab = "Bulas";
-    state.gameActive = true;
-
-    updateUI();
-    drawGame(ctx, state, layout);
-}
-
-// Canvas Mouse Interactions
-canvas.addEventListener("click", (evt: MouseEvent) => {
-    if (!state.gameActive) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (evt.clientX - rect.left) * (canvas.width / rect.width);
-    const mouseY = (evt.clientY - rect.top) * (canvas.height / rect.height);
-
-    if (state.showingFeedback) {
-        playSynthSound("click");
-        const nextResult = advanceCase();
-        if (nextResult) {
-            endGame(nextResult.victory, nextResult.message);
-        } else {
-            drawGame(ctx, state, layout);
-        }
-        return;
+    // 5. Document 3 (Prescription + Stamp)
+    const doc3El = document.getElementById('doc3-paper');
+    if (doc3El && currentCase) {
+        renderPrescriptionDoc(
+            doc3El,
+            currentCase.doc3,
+            state.appliedStamp,
+            state.selectedStamp !== null,
+            () => handleDocument3Click()
+        );
     }
 
-    // Checar cliques nas Abas do Manual Clínico
-    for (let tab of layout.tabs) {
-        if (mouseX >= tab.x && mouseX <= tab.x + tab.w &&
-            mouseY >= tab.y && mouseY <= tab.y + tab.h) {
-            state.currentManualTab = tab.id;
-            playSynthSound("click");
-            drawGame(ctx, state, layout);
-            return;
-        }
-    }
-
-    // Checar clique nos Botões de Carimbo
-    for (let key in layout.stamps) {
-        const stampKey = key as "APROVAR" | "AJUSTAR" | "REJEITAR";
-        let btn = layout.stamps[stampKey];
-        if (mouseX >= btn.x && mouseX <= btn.x + btn.w &&
-            mouseY >= btn.y && mouseY <= btn.y + btn.h) {
-            state.selectedStamp = stampKey;
-            playSynthSound("click");
-            drawGame(ctx, state, layout);
-            return;
-        }
-    }
-
-    // Checar clique para carimbar na Receita Médica
-    let rx = layout.prescription;
-    if (mouseX >= rx.x && mouseX <= rx.x + rx.w &&
-        mouseY >= rx.y && mouseY <= rx.y + rx.h) {
-        if (state.selectedStamp) {
-            state.appliedStamp = state.selectedStamp;
-            playSynthSound("stamp");
-            state.selectedStamp = null; 
-            drawGame(ctx, state, layout);
-        }
-        return;
-    }
-
-    // Checar clique no Botão Confirmar Decisão
-    let btnConf = layout.confirmBtn;
-    if (mouseX >= btnConf.x && mouseX <= btnConf.x + btnConf.w &&
-        mouseY >= btnConf.y && mouseY <= btnConf.y + btnConf.h) {
-        if (state.appliedStamp) {
-            const soundType = processDecision();
-            playSynthSound(soundType);
+    // 6. Stamp Control Panel
+    renderStampPanel(
+        state.selectedStamp,
+        (stamp: Decision) => {
+            selectStamp(state, stamp, soundEngine);
             updateUI();
-            drawGame(ctx, state, layout);
+        },
+        () => {
+            clearSelectedStamp(state);
+            updateUI();
+        }
+    );
+
+    // 7. Modals
+    renderSemesterModal(state.isSemesterOpen, (semName: string) => {
+        selectSemester(state, semName, allCases);
+        updateUI();
+    });
+
+    renderManualModal(
+        state.isBularioOpen,
+        state.activeBularioTab,
+        currentCase?.kinetics,
+        () => {
+            state.isBularioOpen = false;
+            updateUI();
+        },
+        (tab) => {
+            state.activeBularioTab = tab;
+            updateUI();
+        }
+    );
+
+    renderFeedbackModal(
+        state.showingFeedback,
+        state.lastFeedback,
+        () => {
+            nextPatient(state);
+            updateUI();
+        }
+    );
+}
+
+// --- USER INTERACTION HANDLERS ---
+function handleDocument3Click(): void {
+    if (!state.selectedStamp) {
+        const indicator = document.getElementById('stamp-status-indicator');
+        if (indicator) {
+            indicator.classList.add('animate-bounce');
+            setTimeout(() => indicator.classList.remove('animate-bounce'), 1000);
         }
         return;
     }
-});
 
-// Event Listeners for HTML UI Buttons
-btnSemestre4.addEventListener("click", () => startGame("semestre4"));
-btnSemestre5.addEventListener("click", () => startGame("semestre5"));
-btnSemestre6.addEventListener("click", () => startGame("semestre6"));
-btnAleatorio.addEventListener("click", () => startGame("aleatorio"));
-btnReset.addEventListener("click", () => resetGame());
+    const chosenStamp = state.selectedStamp;
+    applyDecision(state, chosenStamp, soundEngine);
+    updateUI();
+}
+
+// --- EVENT SETUP ---
+window.addEventListener('DOMContentLoaded', () => {
+    // Controls
+    const openBularioBtn = document.getElementById('open-bulario-btn');
+    if (openBularioBtn) {
+        openBularioBtn.onclick = () => {
+            state.isBularioOpen = true;
+            updateUI();
+        };
+    }
+
+    const openSemesterBtn = document.getElementById('open-semester-btn');
+    if (openSemesterBtn) {
+        openSemesterBtn.onclick = () => {
+            state.isSemesterOpen = true;
+            updateUI();
+        };
+    }
+
+    // Volume Slider
+    const volumeSlider = document.getElementById('volume-slider') as HTMLInputElement;
+    if (volumeSlider) {
+        volumeSlider.oninput = (e) => {
+            const target = e.target as HTMLInputElement;
+            soundEngine.setVolume(target.value);
+            updateUI();
+        };
+    }
+
+    // Mute Button
+    const muteBtn = document.getElementById('volume-mute-btn');
+    if (muteBtn) {
+        muteBtn.onclick = () => {
+            soundEngine.toggleMute();
+            updateUI();
+        };
+    }
+
+    // Keydown ESC handler to unselect stamp
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            clearSelectedStamp(state);
+            updateUI();
+        }
+    });
+
+    // Setup mouse cursor tracking for floating stamp
+    setupStampCursorTracking(() => state.selectedStamp !== null);
+
+    // Initial render
+    state.gameActive = true;
+    updateUI();
+});

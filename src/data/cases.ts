@@ -1,28 +1,24 @@
-export interface Patient {
-    name: string;
-    age: string;
-    weight: string;
-    renal: string;
+export type Decision = "APROVAR" | "RECUSAR" | "AJUSTAR";
+
+export interface Doc1 {
+    symptoms: string;
+    chronic: string;
     allergies: string;
-    diagnosis: string;
-    currentMeds: string;
 }
 
-export interface Prescription {
+export interface Doc2 {
+    diagnosis: string;
+    labsHtml: string;
+    doctorObs: string;
+    doctorName: string;
+}
+
+export interface Doc3 {
     drug: string;
     dose: string;
-    route: string;
     freq: string;
     duration: string;
-}
-
-export interface DrugDetails {
-    name: string;
-    class: string;
-    indication: string;
-    alert: string;
-    rule: string;
-    halfLife: string;
+    otherDrugs: string;
 }
 
 export interface Kinetics {
@@ -33,50 +29,57 @@ export interface Kinetics {
     desc: string;
 }
 
-export type Decision = "APROVAR" | "AJUSTAR" | "REJEITAR";
-
 export interface Case {
-    semester: number;
-    patient: Patient;
-    prescription: Prescription;
-    drugDetails: DrugDetails;
+    id: number;
+    semesterTag: string;
+    avatarIcon?: string;
+    patientName: string;
+    age: string;
+    weight: string;
+    speech: string;
+    doc1: Doc1;
+    doc2: Doc2;
+    doc3: Doc3;
     correctDecision: Decision;
     explanation: string;
-    incorrectText: string;
     kinetics: Kinetics;
 }
 
 export const allCases: Case[] = [
     // ================= 4º SEMESTRE (BÁSICO & DOSES ESTÁVEIS) =================
     {
-        semester: 4,
-        patient: {
-            name: "Carlos Eduardo Santos",
-            age: "28 anos",
-            weight: "82 kg",
-            renal: "115 mL/min (Excelente ritmo de filtração)",
-            allergies: "Nenhuma conhecida em prontuário",
-            diagnosis: "Amigdalite Bacteriana Aguda na garganta com dor",
-            currentMeds: "Nenhum no momento"
+        id: 1,
+        semesterTag: "4º Semestre: Geral",
+        avatarIcon: "fa-user-check",
+        patientName: "Carlos Eduardo Santos",
+        age: "28 anos",
+        weight: "82 kg",
+        speech: "Estou com uma dor de garganta forte e febre alta há dois dias.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Amigdalite Bacteriana Aguda na garganta com dor",
+            chronic: "Nenhuma",
+            allergies: "Nenhuma conhecida em prontuário"
         },
-        prescription: {
-            drug: "Amoxicilina",
-            dose: "500 mg",
-            route: "Via Oral (VO)",
+        doc2: {
+            diagnosis: "Amigdalite Bacteriana Aguda",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>Função Renal:</span>
+                    <span class="font-bold text-emerald-800">115 mL/min (Normal)</span>
+                </div>
+            `,
+            doctorObs: "Geralmente seguro, alta margem terapêutica no sangue.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "AMOXICILINA 500MG",
+            dose: "500 mg Via Oral (VO)",
             freq: "A cada 8 horas (8/8h)",
-            duration: "10 dias"
-        },
-        drugDetails: {
-            name: "Amoxicilina",
-            class: "Penicilina de Amplo Espectro",
-            indication: "Infecções de vias aéreas superiores, amigdalites.",
-            alert: "Geralmente seguro, alta margem terapêutica no sangue.",
-            rule: "Dose típica em adultos: 500mg de 8/8h por 7 a 10 dias. Requer cautela apenas em caso de alergias graves a antibióticos beta-lactâmicos.",
-            halfLife: "Meia-vida (t1/2): ~1.0 hora. Eliminação renal rápida, exigindo frequência rígida de 8/8h para não cair na zona inefetiva."
+            duration: "10 dias",
+            otherDrugs: "Nenhum no momento"
         },
         correctDecision: "APROVAR",
         explanation: "Caso terapêutico ideal. Dose perfeita para paciente jovem e rim íntegro. O tempo do ciclo de antibiótico está dentro da janela adequada de combate.",
-        incorrectText: "Incorreto! Este é o tratamento padrão inicial. Rejeitar ou ajustar atrasa o combate bacteriano, prolongando o quadro inflamatório do paciente.",
         kinetics: {
             halfLife: 1.0,
             doseAmt: 1.0,
@@ -86,34 +89,38 @@ export const allCases: Case[] = [
         }
     },
     {
-        semester: 4,
-        patient: {
-            name: "Marcos de Oliveira",
-            age: "35 anos",
-            weight: "75 kg",
-            renal: "100 mL/min (Saudável)",
-            allergies: "Nenhuma",
-            diagnosis: "Dor de Cabeça Tensional Recorrente Crônica",
-            currentMeds: "Nenhum"
+        id: 2,
+        semesterTag: "4º Semestre: Geral",
+        avatarIcon: "fa-user-injured",
+        patientName: "Marcos de Oliveira",
+        age: "35 anos",
+        weight: "75 kg",
+        speech: "Estou com uma dor de cabeça tensional horrível que não passa.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Dor de Cabeça Tensional Recorrente Crônica",
+            chronic: "Nenhuma",
+            allergies: "Nenhuma"
         },
-        prescription: {
-            drug: "Paracetamol",
-            dose: "1000 mg (1g)",
-            route: "Via Oral (VO)",
-            freq: "A cada 4 horas (4/4h)",
-            duration: "7 dias"
+        doc2: {
+            diagnosis: "Cefaleia Tensional Crônica",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>Função Renal:</span>
+                    <span class="font-bold text-emerald-800">100 mL/min (Normal)</span>
+                </div>
+            `,
+            doctorObs: "Risco gravíssimo de saturação enzimática hepática.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
         },
-        drugDetails: {
-            name: "Paracetamol",
-            class: "Analgésico e Antipirético",
-            indication: "Cefaleia, febre, dor leve a moderada.",
-            alert: "Risco gravíssimo de saturação enzimática hepática e hepatite medicamentosa fatal.",
-            rule: "Dose diária máxima absoluta em adultos: 4000mg (4g/dia). Doses acima deste limite saturam a glutationa, gerando acúmulo de NAPQI tóxico.",
-            halfLife: "Meia-vida (t1/2): ~2.5 horas. A velocidade de metabolização é estável, mas a via de conjugação satura na sobredose."
+        doc3: {
+            drug: "PARACETAMOL 1000MG",
+            dose: "1000 mg (1g) Via Oral (VO)",
+            freq: "A cada 4 horas (4/4h) (Total = 6.000 mg/dia)",
+            duration: "7 dias",
+            otherDrugs: "Nenhum"
         },
         correctDecision: "AJUSTAR",
         explanation: "Ao prescrever 1g de 4/4h, o paciente consome 6g/dia (6000mg). O limite seguro diário é de 4g. É necessário ajustar a frequência para no mínimo 6/6h para evitar insuficiência hepática fatal.",
-        incorrectText: "Erro fatal! Aprovar esta receita causa lesão celular hepática massiva por acúmulo de metabólito tóxico (NAPQI) não metabolizado.",
         kinetics: {
             halfLife: 2.5,
             doseAmt: 1.8,
@@ -125,34 +132,38 @@ export const allCases: Case[] = [
 
     // ================= 5º SEMESTRE (FARMACOCINÉTICA & AJUSTE RENAL) =================
     {
-        semester: 5,
-        patient: {
-            name: "Roberto de Souza",
-            age: "72 anos",
-            weight: "65 kg",
-            renal: "32 mL/min (Insuficiência Renal Moderada a Grave)",
-            allergies: "Nenhuma cadastrada",
-            diagnosis: "Pneumonia Nosocomial Grave na UTI",
-            currentMeds: "Nenhum"
+        id: 3,
+        semesterTag: "5º Semestre: Cinética",
+        avatarIcon: "fa-user-elderly",
+        patientName: "Roberto de Souza",
+        age: "72 anos",
+        weight: "65 kg",
+        speech: "Estou internado na UTI por conta de uma pneumonia forte.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Pneumonia Nosocomial Grave na UTI",
+            chronic: "Insuficiência Renal Moderada a Grave",
+            allergies: "Nenhuma cadastrada"
         },
-        prescription: {
-            drug: "Gentamicina (Injetável)",
-            dose: "80 mg",
-            route: "Intravenosa (IV)",
+        doc2: {
+            diagnosis: "Pneumonia Nosocomial Grave",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>eGFR (Taxa Filt. Renal):</span>
+                    <span class="font-bold text-amber-900">32 mL/min</span>
+                </div>
+            `,
+            doctorObs: "Janela terapêutica estreita. Alta ototoxicidade e toxicidade renal direta.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "GENTAMICINA 80MG",
+            dose: "80 mg Intravenosa (IV)",
             freq: "A cada 8 horas (8/8h)",
-            duration: "7 dias"
-        },
-        drugDetails: {
-            name: "Gentamicina",
-            class: "Aminoglicosídeo",
-            indication: "Infecções graves por germes gram-negativos resistentes.",
-            alert: "Janela terapêutica estreita. Alta ototoxicidade e toxicidade renal direta cumulativa.",
-            rule: "Com Clearance de Creatinina abaixo de 50 mL/min, é obrigatório aumentar o intervalo para 12h ou 24h para permitir eliminação antes da nova dose.",
-            halfLife: "Meia-vida (t1/2): ~2.0 horas normais. Com ClCr de 32, a meia-vida se estende para mais de 10 horas devido à excreção comprometida!"
+            duration: "7 dias",
+            otherDrugs: "Nenhum"
         },
         correctDecision: "AJUSTAR",
         explanation: "A Gentamicina é eliminada exclusivamente por filtração renal. Com depuração renal em 32 mL/min, a administração de 8/8h causará acúmulo exponencial no sangue, lesionando irreversivelmente a audição e os rins.",
-        incorrectText: "Incorreto! Gentamicina tem janela terapêutica extremamente estreita. Aprovar essa dose vai induzir lesão renal aguda severa e ototoxicidade.",
         kinetics: {
             halfLife: 10.0,
             doseAmt: 1.5,
@@ -162,34 +173,38 @@ export const allCases: Case[] = [
         }
     },
     {
-        semester: 5,
-        patient: {
-            name: "Julio Cesar Mendes",
-            age: "51 anos",
-            weight: "92 kg",
-            renal: "18 mL/min (Insuficiência Renal Crônica Terminal)",
-            allergies: "Nenhuma",
-            diagnosis: "Crise Gota Inflamatória Aguda no dedão do pé",
-            currentMeds: "Alopurinol 100mg/dia"
+        id: 4,
+        semesterTag: "5º Semestre: Cinética",
+        avatarIcon: "fa-user-injured",
+        patientName: "Julio Cesar Mendes",
+        age: "51 anos",
+        weight: "92 kg",
+        speech: "Estou com uma crise de gota horrível no dedão do pé.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Crise Gota Inflamatória Aguda no dedão do pé",
+            chronic: "Insuficiência Renal Crônica Terminal",
+            allergies: "Nenhuma"
         },
-        prescription: {
-            drug: "Ibuprofeno",
-            dose: "600 mg",
-            route: "Via Oral (VO)",
+        doc2: {
+            diagnosis: "Crise de Gota Aguda + IRC Terminal",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>eGFR (Taxa Filt. Renal):</span>
+                    <span class="font-bold text-rose-900">18 mL/min (Terminal)</span>
+                </div>
+            `,
+            doctorObs: "Inibição de prostaglandinas renais reduz bruscamente o fluxo renal.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "IBUPROFENO 600MG",
+            dose: "600 mg Via Oral (VO)",
             freq: "A cada 8 horas (8/8h)",
-            duration: "5 dias"
+            duration: "5 dias",
+            otherDrugs: "Alopurinol 100mg/dia"
         },
-        drugDetails: {
-            name: "Ibuprofeno",
-            class: "Anti-inflamatório Não Esteroidal (AINE)",
-            indication: "Artrites e processos inflamatórios agudos.",
-            alert: "A inibição de prostaglandinas renais reduz bruscamente o fluxo e pressão de perfusão arterial renal.",
-            rule: "Contraindicado de forma absoluta para pacientes com Clearance Renal de Creatinina < 30 mL/min devido à precipitação imediata de falência renal.",
-            halfLife: "Meia-vida (t1/2): ~2.0 horas. Porém, o impacto dinâmico na microcirculação do glomérulo é crítico e imediato."
-        },
-        correctDecision: "REJEITAR",
+        correctDecision: "RECUSAR",
         explanation: "Em paciente com filtração renal de 18 mL/min, qualquer AINE (como Ibuprofeno) bloqueia a síntese de prostaglandinas e interrompe a perfusão do glomérulo. Isso anula a pouca filtração restante, enviando o paciente direto para diálise emergencial.",
-        incorrectText: "Incorreto! Ajustar a dosagem não elimina a restrição fisiológica. AINEs são contraindicados de maneira total em quadros de lesão renal crônica grave.",
         kinetics: {
             halfLife: 2.0,
             doseAmt: 1.3,
@@ -201,34 +216,38 @@ export const allCases: Case[] = [
 
     // ================= 6º SEMESTRE (DINÂMICA AVANÇADA & INTERAÇÕES COMPLEXAS) =================
     {
-        semester: 6,
-        patient: {
-            name: "Maria de Lourdes Oliveira",
-            age: "45 anos",
-            weight: "70 kg",
-            renal: "95 mL/min (Função Saudável)",
-            allergies: "Ácido Acetilsalicílico (AAS)",
-            diagnosis: "Trombose Venosa Profunda (TVP) em perna esquerda",
-            currentMeds: "Varfarina 5mg/dia"
+        id: 5,
+        semesterTag: "6º Semestre: Avançado",
+        avatarIcon: "fa-user-injured",
+        patientName: "Maria de Lourdes Oliveira",
+        age: "45 anos",
+        weight: "70 kg",
+        speech: "Estou tratando uma trombose na perna esquerda e sinto dores.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Trombose Venosa Profunda (TVP) em perna esquerda",
+            chronic: "Nenhuma",
+            allergies: "Ácido Acetilsalicílico (AAS)"
         },
-        prescription: {
-            drug: "Aspirina (AAS)",
-            dose: "500 mg",
-            route: "Via Oral (VO)",
+        doc2: {
+            diagnosis: "TVP em perna esquerda",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>eGFR (Taxa Filt. Renal):</span>
+                    <span class="font-bold text-emerald-800">95 mL/min (Normal)</span>
+                </div>
+            `,
+            doctorObs: "Alergia cruzada conhecida com salicilatos. Sinergismo aditivo com anticoagulantes.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "ASPIRINA (AAS) 500MG",
+            dose: "500 mg Via Oral (VO)",
             freq: "A cada 6 horas (6/6h) se dor",
-            duration: "Se necessário"
+            duration: "Se necessário",
+            otherDrugs: "Varfarina 5mg/dia"
         },
-        drugDetails: {
-            name: "Ácido Acetilsalicílico (AAS)",
-            class: "Anti-inflamatório/Antiplaquetário",
-            indication: "Inibição de agregação plaquetária, analgésico.",
-            alert: "Alergia cruzada conhecida com salicilatos. Sinergismo aditivo com anticoagulantes.",
-            rule: "Contraindicado para alérgicos a salicilatos. A interação farmacodinâmica entre Varfarina e AAS multiplica exponencialmente o tempo de sangramento, causando hemorragias.",
-            halfLife: "Meia-vida (t1/2): ~3.0 horas para dose baixa. A inibição de plaquetas é irreversível pelos 7 dias de vida de cada célula."
-        },
-        correctDecision: "REJEITAR",
-        explanation: "O paciente tem alergia documentada ao AAS. Além disso, a combinação de AAS com Varfarina gera uma interação perigosa de sinergismo hemostático, com altíssimo risco de sangramento gastrointestinal maciço e fatal. Deve ser rejeitado.",
-        incorrectText: "Erro clínico grave! O paciente possui alergia documentada e já está anticoagulado. Aprovar ou tentar ajustar coloca a vida do paciente em risco por hemorragia aguda.",
+        correctDecision: "RECUSAR",
+        explanation: "O paciente tem alergia documentada ao AAS. Além disso, a combinação de AAS com Varfarina gera uma interação perigosa de sinergismo hemostático, com altíssimo risco de sangramento gastrointestinal maciço e fatal. Deve ser recusado.",
         kinetics: {
             halfLife: 3.0,
             doseAmt: 1.7,
@@ -238,34 +257,38 @@ export const allCases: Case[] = [
         }
     },
     {
-        semester: 6,
-        patient: {
-            name: "Ana Julia Lima",
-            age: "34 anos",
-            weight: "58 kg",
-            renal: "88 mL/min (Adequado)",
-            allergies: "Pólen e Dipirona",
-            diagnosis: "Hipertensão Arterial com taquicardia",
-            currentMeds: "Salbutamol (Spray Inalatório SOS contra Crises de Asma)"
+        id: 6,
+        semesterTag: "6º Semestre: Avançado",
+        avatarIcon: "fa-user-ninja",
+        patientName: "Ana Julia Lima",
+        age: "34 anos",
+        weight: "58 kg",
+        speech: "Tenho pressão alta e sinto taquicardia.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Hipertensão Arterial com taquicardia",
+            chronic: "Asma Ativa",
+            allergies: "Pólen e Dipirona"
         },
-        prescription: {
-            drug: "Propranolol",
-            dose: "40 mg",
-            route: "Via Oral (VO)",
+        doc2: {
+            diagnosis: "Hipertensão Arterial + Asma",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>eGFR (Taxa Filt. Renal):</span>
+                    <span class="font-bold text-emerald-800">88 mL/min (Normal)</span>
+                </div>
+            `,
+            doctorObs: "Bloqueia receptores Beta-1 cardíacos e Beta-2 pulmonares.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "PROPRANOLOL 40MG",
+            dose: "40 mg Via Oral (VO)",
             freq: "A cada 12 horas (12/12h)",
-            duration: "Uso Contínuo"
+            duration: "Uso Contínuo",
+            otherDrugs: "Salbutamol (Spray Inalatório SOS)"
         },
-        drugDetails: {
-            name: "Propranolol",
-            class: "Beta-bloqueador Não Seletivo",
-            indication: "Hipertensão, arritmias, taquicardia.",
-            alert: "Bloqueia receptores Beta-1 cardíacos e simultaneamente os receptores Beta-2 pulmonares.",
-            rule: "Contraindicado de forma absoluta em pacientes com asma ativa ou broncoespasmo crônico. Ao bloquear receptores pulmonares Beta-2, anula a ação do Salbutamol e causa crise asmática irreversível.",
-            halfLife: "Meia-vida (t1/2): ~4.0 horas. O bloqueio de receptores pulmonares impede a dilatação brônquica vital."
-        },
-        correctDecision: "REJEITAR",
-        explanation: "O Propranolol bloqueia não-seletivamente os receptores pulmonares Beta-2. Se a paciente asmatica precisar do Salbutamol (um agonista Beta-2), o medicamento de resgate será ineficaz devido ao bloqueio físico pelo Propranolol, desencadeando asfixia grave.",
-        incorrectText: "Erro letal! O Propranolol causará um broncoespasmo severo que não poderá ser revertido pelo Salbutamol de resgate, gerando insuficiência respiratória imediata.",
+        correctDecision: "RECUSAR",
+        explanation: "O Propranolol bloqueia não-seletivamente os receptores pulmonares Beta-2. Se a paciente asmática precisar do Salbutamol (um agonista Beta-2), o medicamento de resgate será ineficaz devido ao bloqueio físico pelo Propranolol, desencadeando asfixia grave.",
         kinetics: {
             halfLife: 4.0,
             doseAmt: 1.0,
@@ -275,34 +298,38 @@ export const allCases: Case[] = [
         }
     },
     {
-        semester: 6,
-        patient: {
-            name: "Dona Leonor Vieira",
-            age: "79 anos",
-            weight: "50 kg",
-            renal: "42 mL/min (Função Reduzida pela Idade)",
-            allergies: "Nenhuma",
-            diagnosis: "Insuficiência Cardíaca Congestiva (ICC) com fibrilação",
-            currentMeds: "Digoxina 0.25 mg/dia"
+        id: 7,
+        semesterTag: "6º Semestre: Avançado",
+        avatarIcon: "fa-user-elderly",
+        patientName: "Dona Leonor Vieira",
+        age: "79 anos",
+        weight: "50 kg",
+        speech: "Tenho insuficiência cardíaca e batedeira no coração.", // TODO: revisar com especialista
+        doc1: {
+            symptoms: "Insuficiência Cardíaca Congestiva (ICC) com fibrilação",
+            chronic: "Função Renal Reduzida pela Idade",
+            allergies: "Nenhuma"
         },
-        prescription: {
-            drug: "Amiodarona",
-            dose: "200 mg",
-            route: "Via Oral (VO)",
+        doc2: {
+            diagnosis: "ICC + Fibrilação Atrial",
+            labsHtml: `
+                <div class="flex justify-between border-b border-[#dcd1be] pb-1">
+                    <span>eGFR (Taxa Filt. Renal):</span>
+                    <span class="font-bold text-amber-900">42 mL/min</span>
+                </div>
+            `,
+            doctorObs: "Inibe fortemente a glicoproteína-P e o citocromo CYP3A4.",
+            doctorName: "Dr. Responsável • CRM 00000" // TODO: revisar com especialista
+        },
+        doc3: {
+            drug: "AMIODARONA 200MG",
+            dose: "200 mg Via Oral (VO)",
             freq: "A cada 8 horas (8/8h)",
-            duration: "Fase de Carga por 5 dias"
-        },
-        drugDetails: {
-            name: "Amiodarona",
-            class: "Antiarrítmico Classe III",
-            indication: "Arritmias ventriculares e supraventriculares.",
-            alert: "Inibe fortemente a glicoproteína-P (gp-P) e o citocromo CYP3A4, reduzindo o clearance sistêmico da Digoxina.",
-            rule: "Ao introduzir Amiodarona a um paciente usando Digoxina, a dose de Digoxina DEVE ser reduzida preventivamente em 50% para evitar intoxicação digitálica com arritmias mortais.",
-            halfLife: "Meia-vida (t1/2): Amiodarona possui meia-vida extraordinária de até 60 dias! Ela satura tecidos e reduz a excreção de digoxina continuamente."
+            duration: "Fase de Carga por 5 dias",
+            otherDrugs: "Digoxina 0.25 mg/dia"
         },
         correctDecision: "AJUSTAR",
         explanation: "A Amiodarona bloqueia a depuração da Digoxina. Se ambas as doses cheias forem administradas simultaneamente, os níveis plasmáticos de Digoxina escalarão para a faixa de toxicidade (parada por assistolia ou bloqueio atrioventricular total). Deve-se solicitar o ajuste (redução imediata da Digoxina).",
-        incorrectText: "Erro perigoso! Introduzir Amiodarona sem diminuir a dose da Digoxina em uso causará intoxicação digitálica severa em menos de 48 horas devido ao acúmulo por bloqueio de transportadores de excreção.",
         kinetics: {
             halfLife: 48.0,
             doseAmt: 2.0,
